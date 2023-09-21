@@ -12,7 +12,10 @@ namespace MetaFrm.Service
         private readonly string AccessCode;
         private readonly string Join;
 
-        private BrokerService()
+        /// <summary>
+        /// BrokerService
+        /// </summary>
+        public BrokerService()
         {
             this.Login = this.GetAttribute(nameof(this.Login));
             this.AccessCode = this.GetAttribute(nameof(this.AccessCode));
