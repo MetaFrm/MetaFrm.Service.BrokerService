@@ -11,6 +11,7 @@ namespace MetaFrm.Service
         private readonly string Login;
         private readonly string AccessCode;
         private readonly string Join;
+        private readonly string PasswordReset;
 
         /// <summary>
         /// BrokerService
@@ -20,6 +21,7 @@ namespace MetaFrm.Service
             this.Login = this.GetAttribute(nameof(this.Login));
             this.AccessCode = this.GetAttribute(nameof(this.AccessCode));
             this.Join = this.GetAttribute(nameof(this.Join));
+            this.PasswordReset = this.GetAttribute(nameof(this.PasswordReset));
         }
 
         Response IBrokerService.Request(BrokerData brokerData)
@@ -38,33 +40,29 @@ namespace MetaFrm.Service
             {
                 for (int i = 0; i < brokerData.ServiceData.Commands[key].Values.Count; i++)
                 {
-                    if (brokerData.ServiceData.Commands[key].CommandText == this.Login)//Login
+                    switch (brokerData.ServiceData.Commands[key].CommandText)
                     {
-                        string? email = brokerData.ServiceData.Commands[key].Values[i]["EMAIL"].StringValue;
+                        case nameof(this.Login):
+                            string? email = brokerData.ServiceData.Commands[key].Values[i]["EMAIL"].StringValue;
 
-                        this.PushNotification(nameof(this.Login)
-                            , email
-                            , $"Login {(brokerData.Response.Status == Status.OK ? "OK" : "Fail")}"
-                            , $"{(brokerData.Response.Status == Status.OK ? email : brokerData.Response.Message)}"
-                            , brokerData.DateTime
-                            , brokerData.Response.Status
-                            , null);
-                    }
-                    else if (brokerData.ServiceData.Commands[key].CommandText == this.AccessCode
-                        && brokerData.Response.Status == Status.OK && brokerData.Response.DataSet != null && brokerData.Response.DataSet.DataTables.Count > 0 && brokerData.Response.DataSet.DataTables[0].DataRows.Count > 0)//AccessCode
-                    {
-                        this.SandEmail(nameof(this.AccessCode)
-                            , brokerData.Response.DataSet.DataTables[0].DataRows[0].String("SUBJECT")
-                            , brokerData.Response.DataSet.DataTables[0].DataRows[0].String("BODY")
-                            , brokerData.Response.DataSet.DataTables[0].DataRows[0].String("EMAIL"));
-                    }
-                    else if (brokerData.ServiceData.Commands[key].CommandText == this.Join
-                        && brokerData.Response.Status == Status.OK && brokerData.Response.DataSet != null && brokerData.Response.DataSet.DataTables.Count > 0 && brokerData.Response.DataSet.DataTables[0].DataRows.Count > 0)//Join
-                    {
-                        this.SandEmail(nameof(this.AccessCode)
-                            , brokerData.Response.DataSet.DataTables[0].DataRows[0].String("SUBJECT")
-                            , brokerData.Response.DataSet.DataTables[0].DataRows[0].String("BODY")
-                            , brokerData.Response.DataSet.DataTables[0].DataRows[0].String("EMAIL"));
+                            this.PushNotification(nameof(this.Login)
+                                , email
+                                , $"Login {(brokerData.Response.Status == Status.OK ? "OK" : "Fail")}"
+                                , $"{(brokerData.Response.Status == Status.OK ? email : brokerData.Response.Message)}"
+                                , brokerData.DateTime
+                                , brokerData.Response.Status
+                                , null);
+                            break;
+
+                        case string tmp when tmp == this.AccessCode || tmp == this.Join || tmp == this.PasswordReset:
+                            if (brokerData.Response.Status == Status.OK && brokerData.Response.DataSet != null && brokerData.Response.DataSet.DataTables.Count > 0 && brokerData.Response.DataSet.DataTables[0].DataRows.Count > 0)//AccessCode
+                            {
+                                this.SandEmail(tmp
+                                    , brokerData.Response.DataSet.DataTables[0].DataRows[0].String("SUBJECT")
+                                    , brokerData.Response.DataSet.DataTables[0].DataRows[0].String("BODY")
+                                    , brokerData.Response.DataSet.DataTables[0].DataRows[0].String("EMAIL"));
+                            }
+                            break;
                     }
                 }
             }
@@ -146,7 +144,7 @@ namespace MetaFrm.Service
 
             throw new Exception("Get FirebaseFCM Token  Fail !!");
         }
-        private Data.DataTable? SandEmail(string ACTION, string? SUBJECT, string? BODY, string? EMAIL)
+        private void SandEmail(string ACTION, string? SUBJECT, string? BODY, string? EMAIL)
         {
             IService service;
             Response response;
@@ -168,10 +166,7 @@ namespace MetaFrm.Service
             if (response.Status == Status.OK)
             {
                 if (response.DataSet != null && response.DataSet.DataTables.Count > 0)
-                {
-                    Console.WriteLine("Get FirebaseFCM Token Completed !!");
-                    return response.DataSet.DataTables[0];
-                }
+                    Console.WriteLine("SandEmail Completed !!");
             }
             else
             {
@@ -179,7 +174,7 @@ namespace MetaFrm.Service
                     throw new Exception(response.Message);
             }
 
-            throw new Exception("Get FirebaseFCM Token  Fail !!");
+            throw new Exception("SandEmail Fail !!");
         }
     }
 }
