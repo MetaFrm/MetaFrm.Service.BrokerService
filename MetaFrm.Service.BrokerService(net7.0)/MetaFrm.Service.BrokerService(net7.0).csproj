@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFramework>net7.0</TargetFramework>
 		<RootNamespace>MetaFrm</RootNamespace>
@@ -10,7 +10,7 @@
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<PackageId>MetaFrm.Service.BrokerService.net7.0</PackageId>
 		<Title>Meta Framework Service BrokerService</Title>
-		<Version>6.0.0.2</Version>
+		<Version>6.0.0.3</Version>
 		<Authors>dsun</Authors>
 		<Company>Meta Framework</Company>
 		<Product>Meta Framework Service BrokerService</Product>

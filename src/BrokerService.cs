@@ -42,7 +42,7 @@ namespace MetaFrm.Service
                 {
                     switch (brokerData.ServiceData.Commands[key].CommandText)
                     {
-                        case nameof(this.Login):
+                        case string tmp when tmp == this.Login:
                             string? email = brokerData.ServiceData.Commands[key].Values[i]["EMAIL"].StringValue;
 
                             this.PushNotification(nameof(this.Login)
