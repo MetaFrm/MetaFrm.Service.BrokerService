@@ -12,6 +12,7 @@ namespace MetaFrm.Service
         private readonly string AccessCode;
         private readonly string Join;
         private readonly string PasswordReset;
+        private readonly string Withdrawal;
 
         /// <summary>
         /// BrokerService
@@ -22,6 +23,7 @@ namespace MetaFrm.Service
             this.AccessCode = this.GetAttribute(nameof(this.AccessCode));
             this.Join = this.GetAttribute(nameof(this.Join));
             this.PasswordReset = this.GetAttribute(nameof(this.PasswordReset));
+            this.Withdrawal = this.GetAttribute(nameof(this.Withdrawal));
         }
 
         Response IBrokerService.Request(BrokerData brokerData)
@@ -54,7 +56,7 @@ namespace MetaFrm.Service
                                 , null);
                             break;
 
-                        case string tmp when tmp == this.AccessCode || tmp == this.Join || tmp == this.PasswordReset:
+                        case string tmp when tmp == this.AccessCode || tmp == this.Join || tmp == this.PasswordReset || tmp == this.Withdrawal:
                             if (brokerData.Response.Status == Status.OK && brokerData.Response.DataSet != null && brokerData.Response.DataSet.DataTables.Count > 0 && brokerData.Response.DataSet.DataTables[0].DataRows.Count > 0)//AccessCode
                             {
                                 this.SandEmail(tmp
