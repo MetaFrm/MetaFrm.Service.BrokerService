@@ -53,7 +53,18 @@ namespace MetaFrm.Service
                                 , $"{(brokerData.Response.Status == Status.OK ? email : brokerData.Response.Message)}"
                                 , brokerData.DateTime
                                 , brokerData.Response.Status
-                                , null);
+                                , null, null);
+                            break;
+
+                        case string tmp when tmp == "PushNotification" || tmp == "PushNotificationGithub":
+                            this.PushNotification(tmp
+                            , brokerData.ServiceData.Commands[key].Values[i]["Email"].StringValue
+                            , brokerData.ServiceData.Commands[key].Values[i]["Title"].StringValue
+                            , brokerData.ServiceData.Commands[key].Values[i]["Body"].StringValue
+                            , brokerData.DateTime
+                            , brokerData.Response.Status
+                            , brokerData.ServiceData.Commands[key].Values[i]["ImageUrl"].StringValue
+                            , brokerData.ServiceData.Commands[key].Values[i]["Data"].StringValue);
                             break;
 
                         case string tmp when tmp == this.AccessCode || tmp == this.Join || tmp == this.PasswordReset || tmp == this.Withdrawal:
@@ -75,7 +86,7 @@ namespace MetaFrm.Service
         }
 
 
-        private void PushNotification(string ACTION, string? EMAIL, string Title, string? Body, DateTime dateTime, Status status, Dictionary<string, string>? data)
+        private void PushNotification(string ACTION, string? EMAIL, string? Title, string? Body, DateTime dateTime, Status status, string? ImageUrl, string? Data)
         {
             IService service;
             Data.DataTable? dataTable;
@@ -104,8 +115,8 @@ namespace MetaFrm.Service
                 serviceData["1"].SetValue("Token", item.String("TOKEN_STR"));
                 serviceData["1"].SetValue(nameof(Title), $"{Title} {dateTime:dd HH:mm:ss}");
                 serviceData["1"].SetValue(nameof(Body), $"{Body}");
-                serviceData["1"].SetValue("ImageUrl", status == Status.OK ? "Complete" : "Fail");
-                serviceData["1"].SetValue("Data", data != null ? JsonSerializer.Serialize(data) : null);
+                serviceData["1"].SetValue(nameof(ImageUrl), ImageUrl.IsNullOrEmpty() ? (status == Status.OK ? "Complete" : "Fail") : ImageUrl);
+                serviceData["1"].SetValue(nameof(Data), Data);
             }
 
             service = (IService)Factory.CreateInstance(serviceData.ServiceName);
