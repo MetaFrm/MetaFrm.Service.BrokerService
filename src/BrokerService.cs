@@ -166,6 +166,7 @@ namespace MetaFrm.Service
                     if (response.DataSet != null && response.DataSet.DataTables.Count > 0)
                         lock (preferences)
                         {
+                            preferences.PreferencesList.Clear();
                             foreach (var item in response.DataSet.DataTables[0].DataRows)
                                 preferences.PreferencesList.Add(new()
                                 {
