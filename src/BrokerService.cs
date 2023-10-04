@@ -1,4 +1,5 @@
 ﻿using MetaFrm.Database;
+using System;
 using System.Text.Json;
 
 namespace MetaFrm.Service
@@ -13,6 +14,7 @@ namespace MetaFrm.Service
         private readonly string Join;
         private readonly string PasswordReset;
         private readonly string Withdrawal;
+        private readonly Dictionary<string, object> keyValues = new();
 
         /// <summary>
         /// BrokerService
@@ -85,11 +87,23 @@ namespace MetaFrm.Service
             return response;
         }
 
-
         private void PushNotification(string ACTION, string? EMAIL, string? Title, string? Body, DateTime dateTime, Status status, string? ImageUrl, string? Data)
         {
             IService service;
             Data.DataTable? dataTable;
+
+            this.LoadPreferences();
+
+            if (this.keyValues.ContainsKey("Preferences") && this.keyValues["Preferences"] is Preferences preferences)
+            {
+                lock (preferences)
+                {
+                    var item = preferences.PreferencesList.SingleOrDefault(x => x.EMAIL == EMAIL && x.PREFERENCES_KEY == "Y");
+
+                    if (item == null)
+                        return;
+                }
+            }
 
             dataTable = this.GetFirebaseFCM_Token(ACTION, EMAIL);
 
@@ -122,6 +136,57 @@ namespace MetaFrm.Service
             service = (IService)Factory.CreateInstance(serviceData.ServiceName);
             //service = (IService)new MetaFrm.Service.FirebaseAdminService();
             _ = service.Request(serviceData);
+        }
+        private void LoadPreferences()
+        {
+            IService service;
+            Response response;
+            int preferencesReflashSeconds;
+
+            preferencesReflashSeconds = -this.GetAttributeInt("PreferencesReflashSeconds");
+
+            if (!this.keyValues.ContainsKey("Preferences"))
+                this.keyValues.Add("Preferences", new Preferences(DateTime.Now.AddSeconds(preferencesReflashSeconds)));//1분   2분5초-1분=>1분5초
+
+            if (this.keyValues["Preferences"] is Preferences preferences && (preferences.DateTime <= DateTime.Now.AddSeconds(preferencesReflashSeconds) || preferences.PreferencesList.Count < 1))
+            {
+                ServiceData serviceData = new()
+                {
+                    TransactionScope = false,
+                };
+                serviceData["1"].CommandText = this.GetAttribute("SearchPreferences");
+                serviceData["1"].CommandType = System.Data.CommandType.StoredProcedure;
+                serviceData["1"].AddParameter("USER_ID", DbType.Int, 3, null);
+
+                service = (IService)Factory.CreateInstance(serviceData.ServiceName);
+                response = service.Request(serviceData);
+
+                if (response.Status == Status.OK)
+                {
+                    if (response.DataSet != null && response.DataSet.DataTables.Count > 0)
+                        lock (preferences)
+                        {
+                            foreach (var item in response.DataSet.DataTables[0].DataRows)
+                                preferences.PreferencesList.Add(new()
+                                {
+                                    USER_ID = item.Int(nameof(PreferencesModel.USER_ID)),
+                                    EMAIL = item.String(nameof(PreferencesModel.EMAIL)),
+                                    PLATFORM = item.String(nameof(PreferencesModel.PLATFORM)),
+                                    DEVICE_MODEL = item.String(nameof(PreferencesModel.DEVICE_MODEL)),
+                                    DEVICE_NAME = item.String(nameof(PreferencesModel.DEVICE_NAME)),
+                                    PREFERENCES_KEY = item.String(nameof(PreferencesModel.PREFERENCES_KEY)),
+                                    PREFERENCES_VALUE = item.String(nameof(PreferencesModel.PREFERENCES_VALUE)),
+                                });
+
+                            preferences.DateTime = DateTime.Now;
+                        }
+                }
+                else
+                {
+                    if (response.Message != null)
+                        Console.WriteLine(response.Message);
+                }
+            }
         }
         private Data.DataTable? GetFirebaseFCM_Token(string ACTION, string? EMAIL)
         {
@@ -157,6 +222,7 @@ namespace MetaFrm.Service
 
             throw new Exception("Get FirebaseFCM Token  Fail !!");
         }
+
         private void SandEmail(string ACTION, string? SUBJECT, string? BODY, string? EMAIL)
         {
             IService service;
@@ -189,5 +255,28 @@ namespace MetaFrm.Service
 
             throw new Exception("SandEmail Fail !!");
         }
+    }
+
+    internal class Preferences : ICore
+    {
+        public DateTime DateTime { get; set; }
+
+        public List<PreferencesModel> PreferencesList = new();
+
+        public Preferences(DateTime dateTime)
+        {
+            this.DateTime = dateTime;
+        }
+    }
+
+    internal class PreferencesModel : ICore
+    {
+        public int? USER_ID { get; set; }
+        public string? EMAIL { get; set; }
+        public string? PLATFORM { get; set; }
+        public string? DEVICE_MODEL { get; set; }
+        public string? DEVICE_NAME { get; set; }
+        public string? PREFERENCES_KEY { get; set; }
+        public string? PREFERENCES_VALUE { get; set; }
     }
 }
