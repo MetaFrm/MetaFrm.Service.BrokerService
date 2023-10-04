@@ -94,11 +94,11 @@ namespace MetaFrm.Service
 
             this.LoadPreferences();
 
-            if (this.keyValues.ContainsKey("Preferences") && this.keyValues["Preferences"] is Preferences preferences)
+            if (this.keyValues.ContainsKey(nameof(Preferences)) && this.keyValues[nameof(Preferences)] is Preferences preferences)
             {
                 lock (preferences)
                 {
-                    var item = preferences.PreferencesList.SingleOrDefault(x => x.EMAIL == EMAIL && x.PREFERENCES_KEY == "Y");
+                    var item = preferences.PreferencesList.SingleOrDefault(x => x.EMAIL == EMAIL && x.PREFERENCES_KEY == ACTION && x.PREFERENCES_VALUE == "Y");
 
                     if (item == null)
                         return;
@@ -145,10 +145,10 @@ namespace MetaFrm.Service
 
             preferencesReflashSeconds = -this.GetAttributeInt("PreferencesReflashSeconds");
 
-            if (!this.keyValues.ContainsKey("Preferences"))
-                this.keyValues.Add("Preferences", new Preferences(DateTime.Now.AddSeconds(preferencesReflashSeconds)));//1분   2분5초-1분=>1분5초
+            if (!this.keyValues.ContainsKey(nameof(Preferences)))
+                this.keyValues.Add(nameof(Preferences), new Preferences(DateTime.Now.AddSeconds(preferencesReflashSeconds)));//1분   2분5초-1분=>1분5초
 
-            if (this.keyValues["Preferences"] is Preferences preferences && (preferences.DateTime <= DateTime.Now.AddSeconds(preferencesReflashSeconds) || preferences.PreferencesList.Count < 1))
+            if (this.keyValues[nameof(Preferences)] is Preferences preferences && (preferences.DateTime <= DateTime.Now.AddSeconds(preferencesReflashSeconds) || preferences.PreferencesList.Count < 1))
             {
                 ServiceData serviceData = new()
                 {
