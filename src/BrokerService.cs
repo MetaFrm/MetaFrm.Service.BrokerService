@@ -98,9 +98,9 @@ namespace MetaFrm.Service
             {
                 lock (preferences)
                 {
-                    var item = preferences.PreferencesList.SingleOrDefault(x => x.EMAIL == EMAIL && x.PREFERENCES_KEY == ACTION && x.PREFERENCES_VALUE == "Y");
+                    var item = preferences.PreferencesList.SingleOrDefault(x => x.EMAIL == EMAIL && x.PREFERENCES_KEY == ACTION);
 
-                    if (item == null)
+                    if (item != null && item.PREFERENCES_VALUE == "N")
                         return;
                 }
             }
