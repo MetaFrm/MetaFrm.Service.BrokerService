@@ -46,9 +46,9 @@ namespace MetaFrm.Service
                         case nameof(EmailNotification):
                             var valuesEmail = brokerData.ServiceData.Commands[commandKey].Values[i];
 
-                            if (valuesEmail.ContainsKey(nameof(SandEmailModel.EMAIL))
-                                && valuesEmail.ContainsKey(nameof(SandEmailModel.SUBJECT))
-                                && valuesEmail.ContainsKey(nameof(SandEmailModel.BODY)))
+                            if (valuesEmail.TryGetValue(nameof(SandEmailModel.EMAIL), out _)
+                                && valuesEmail.TryGetValue(nameof(SandEmailModel.SUBJECT), out _)
+                                && valuesEmail.TryGetValue(nameof(SandEmailModel.BODY), out _))
                                 if (!valuesEmail[nameof(SandEmailModel.EMAIL)].StringValue.IsNullOrEmpty())
                                 {
                                     sandEmailList.Add(new()
@@ -65,11 +65,11 @@ namespace MetaFrm.Service
                         case nameof(PushNotification):
                             var valuesPush = brokerData.ServiceData.Commands[commandKey].Values[i];
 
-                            if (valuesPush.ContainsKey(nameof(PushModel.Email))
-                                && valuesPush.ContainsKey(nameof(PushModel.Title))
-                                && valuesPush.ContainsKey(nameof(PushModel.Body))
-                                && valuesPush.ContainsKey(nameof(PushModel.ImageUrl))
-                                && valuesPush.ContainsKey(nameof(PushModel.Data)))
+                            if (valuesPush.TryGetValue(nameof(PushModel.Email), out _)
+                                && valuesPush.TryGetValue(nameof(PushModel.Title), out _)
+                                && valuesPush.TryGetValue(nameof(PushModel.Body), out _)
+                                && valuesPush.TryGetValue(nameof(PushModel.ImageUrl), out _)
+                                && valuesPush.TryGetValue(nameof(PushModel.Data), out _))
                                 if (!valuesPush[nameof(PushModel.Email)].StringValue.IsNullOrEmpty())
                                 {
                                     tokenDataTable = this.GetFirebaseFCM_Token(brokerData.ServiceData.Commands[commandKey].CommandText, valuesPush[nameof(PushModel.Email)].StringValue);
@@ -109,13 +109,13 @@ namespace MetaFrm.Service
                             string? key = null;
                             IEnumerable<PreferencesModel>? preferencesModel = null;
 
-                            if (values.ContainsKey("USER_ID"))
+                            if (values.TryGetValue("USER_ID", out _))
                             {
                                 name = "USER_ID";
                                 key = $"Preferences.{values[name].IntValue}";
                                 this.LoadPreferences(values[name].IntValue, null);
                             }
-                            else if (values.ContainsKey("EMAIL"))
+                            else if (values.TryGetValue("EMAIL", out _))
                             {
                                 name = "EMAIL";
                                 key = $"Preferences.{values[name].StringValue}";
@@ -129,7 +129,7 @@ namespace MetaFrm.Service
                                 preferences1 = null;
 
                                 lock (this.keyValues)
-                                    if (key != null && this.keyValues.ContainsKey(key) && this.keyValues[key] is Preferences preferences2)
+                                    if (key != null && this.keyValues.TryGetValue(key, out object? obj) && obj is Preferences preferences2)
                                         preferences1 = preferences2;
 
                                 if (preferences1 != null)
@@ -238,7 +238,7 @@ namespace MetaFrm.Service
 
             lock (this.keyValues)
             {
-                if (!this.keyValues.ContainsKey(key))
+                if (!this.keyValues.TryGetValue(key, out _))
                     this.keyValues.Add(key, new TokenDataTable(DateTime.Now.AddSeconds(this.ReflashSeconds)));//1분   2분5초-1분=>1분5초
 
                 if (this.keyValues[key] is TokenDataTable tokenDataTable1)
@@ -312,7 +312,7 @@ namespace MetaFrm.Service
             preferences = null;
 
             lock (this.keyValues)
-                if (pushModelList[0].Action != nameof(PushNotification) && this.keyValues.ContainsKey(key) && this.keyValues[key] is Preferences preferences1)
+                if (pushModelList[0].Action != nameof(PushNotification) && this.keyValues.TryGetValue(key, out object? obj) && obj is Preferences preferences1)
                     preferences = preferences1;
 
             foreach (var item in pushModelList)
@@ -363,7 +363,7 @@ namespace MetaFrm.Service
             preferences = null;
 
             lock (this.keyValues)
-                if (sandEmailList[0].ACTION != nameof(EmailNotification) && this.keyValues.ContainsKey(key) && this.keyValues[key] is Preferences preferences1)
+                if (sandEmailList[0].ACTION != nameof(EmailNotification) && this.keyValues.TryGetValue(key, out object? obj) && obj is Preferences preferences1)
                     preferences = preferences1;
 
             foreach (var item in sandEmailList)
