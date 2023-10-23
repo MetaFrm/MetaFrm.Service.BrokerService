@@ -88,6 +88,11 @@ namespace MetaFrm.Service
                                             });
                                 }
                             break;
+                        case string tmp when tmp.StartsWith("Batch."):
+                            brokerData.ServiceData.ServiceName = Factory.ProjectService.ServiceNamespace;
+                            brokerData.ServiceData.Commands[commandKey].CommandText = brokerData.ServiceData.Commands[commandKey].CommandText.Replace("Batch.", "");
+
+                            return ((IService)Factory.CreateInstance(brokerData.ServiceData.ServiceName)).Request(brokerData.ServiceData);
 
                         default:
                             string? MESSAGE_TITLE = null;
