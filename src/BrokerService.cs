@@ -92,132 +92,14 @@ namespace MetaFrm.Service
                             brokerData.ServiceData.ServiceName = Factory.ProjectService.ServiceNamespace;
                             brokerData.ServiceData.Commands[commandKey].CommandText = brokerData.ServiceData.Commands[commandKey].CommandText.Replace("Batch.", "");
 
-                            return ((IService)Factory.CreateInstance(brokerData.ServiceData.ServiceName)).Request(brokerData.ServiceData);
+                            brokerData.Response = ((IService)Factory.CreateInstance(brokerData.ServiceData.ServiceName)).Request(brokerData.ServiceData);
+
+                            this.RequestDefault(brokerData, commandKey, i, sandEmailList, pushModelList);
+
+                            return brokerData.Response;
 
                         default:
-                            string? MESSAGE_TITLE = null;
-                            string? MESSAGE_BODY = null;
-
-                            if (brokerData.Response.Status == Status.OK && brokerData.Response.DataSet != null && brokerData.Response.DataSet.DataTables.Count > 0)
-                                foreach (var table in brokerData.Response.DataSet.DataTables)
-                                    if (table.DataColumns.Any(x => x.FieldName == nameof(MESSAGE_TITLE))
-                                        && table.DataColumns.Any(x => x.FieldName == nameof(MESSAGE_BODY))
-                                        && table.DataRows.Count > 0)
-                                    {
-                                        MESSAGE_TITLE = table.DataRows[0].String(nameof(MESSAGE_TITLE));
-                                        MESSAGE_BODY = table.DataRows[0].String(nameof(MESSAGE_BODY));
-                                        break;
-                                    }
-
-                            var values = brokerData.ServiceData.Commands[commandKey].Values[i];
-                            string? name = null;
-                            string? key = null;
-                            IEnumerable<PreferencesModel>? preferencesModel = null;
-
-                            if (values.TryGetValue("USER_ID", out _))
-                            {
-                                name = "USER_ID";
-                                key = $"Preferences.{values[name].IntValue}";
-                                this.LoadPreferences(values[name].IntValue, null);
-                            }
-                            else if (values.TryGetValue("EMAIL", out _))
-                            {
-                                name = "EMAIL";
-                                key = $"Preferences.{values[name].StringValue}";
-                                this.LoadPreferences(null, values[name].StringValue);
-                            }
-
-                            if (name != null && key != null)
-                            {
-                                Preferences? preferences1;
-
-                                preferences1 = null;
-
-                                lock (this.keyValues)
-                                    if (key != null && this.keyValues.TryGetValue(key, out object? obj) && obj is Preferences preferences2)
-                                        preferences1 = preferences2;
-
-                                if (preferences1 != null)
-                                    lock (preferences1)
-                                    {
-                                        if (name == "USER_ID")
-                                            preferencesModel = preferences1?.PreferencesList.Where(x => x.USER_ID == values["USER_ID"].IntValue && x.PREFERENCES_KEY == brokerData.ServiceData.Commands[commandKey].CommandText);
-                                        else
-                                            preferencesModel = preferences1?.PreferencesList.Where(x => x.EMAIL == values["EMAIL"].StringValue && x.PREFERENCES_KEY == brokerData.ServiceData.Commands[commandKey].CommandText);
-
-                                        if (preferencesModel != null)
-                                            preferencesModel = JsonSerializer.Deserialize<IEnumerable<PreferencesModel>?>(JsonSerializer.Serialize(preferencesModel));
-                                    }
-                            }
-
-                            if (preferencesModel != null)
-                                foreach (var item in preferencesModel)
-                                {
-                                    if (brokerData.Response.Status == Status.OK)
-                                    {
-                                        if (!MESSAGE_TITLE.IsNullOrEmpty() && !item.OK_TITLE.IsNullOrEmpty() && item.OK_TITLE.Contains("{0}"))
-                                            MESSAGE_TITLE = string.Format(item.OK_TITLE, MESSAGE_TITLE);
-                                        else
-                                            MESSAGE_TITLE = item.OK_TITLE;
-
-                                        if (!MESSAGE_BODY.IsNullOrEmpty() && !item.OK_BODY.IsNullOrEmpty() && item.OK_BODY.Contains("{0}"))
-                                            MESSAGE_BODY = string.Format(item.OK_BODY, MESSAGE_BODY);
-                                        else
-                                            MESSAGE_BODY = item.OK_BODY;
-                                    }
-                                    else
-                                    {
-                                        if (!MESSAGE_TITLE.IsNullOrEmpty() && !item.FAILED_TITLE.IsNullOrEmpty() && item.FAILED_TITLE.Contains("{0}"))
-                                            MESSAGE_TITLE = string.Format(item.FAILED_TITLE, MESSAGE_TITLE);
-                                        else
-                                            MESSAGE_TITLE = item.FAILED_TITLE;
-
-                                        if (brokerData.Response.Message != null)
-                                        {
-                                            if (!item.FAILED_BODY.IsNullOrEmpty() && item.FAILED_BODY.Contains("{0}"))
-                                                MESSAGE_BODY = string.Format(item.FAILED_BODY, brokerData.Response.Message);
-                                            else
-                                                MESSAGE_BODY = brokerData.Response.Message;
-                                        }
-                                        else
-                                        {
-                                            if (!MESSAGE_BODY.IsNullOrEmpty() && !item.FAILED_BODY.IsNullOrEmpty() && item.FAILED_BODY.Contains("{0}"))
-                                                MESSAGE_BODY = string.Format(item.FAILED_BODY, MESSAGE_BODY);
-                                            else
-                                                MESSAGE_BODY = item.FAILED_BODY;
-                                        }
-                                    }
-
-                                    if (item.PREFERENCES_TYPE == nameof(EmailNotification))
-                                    {
-                                        sandEmailList.Add(new()
-                                        {
-                                            ACTION = brokerData.ServiceData.Commands[commandKey].CommandText,
-                                            EMAIL = item.EMAIL,
-                                            SUBJECT = MESSAGE_TITLE,
-                                            BODY = MESSAGE_BODY,
-                                        });
-                                    }
-                                    else if (item.PREFERENCES_TYPE == nameof(PushNotification))
-                                    {
-                                        tokenDataTable = this.GetFirebaseFCM_Token(brokerData.ServiceData.Commands[commandKey].CommandText, item.EMAIL);
-
-                                        if (tokenDataTable != null && tokenDataTable.DataTable != null)
-                                            lock (tokenDataTable)
-                                                foreach (var itemToken in tokenDataTable.DataTable.DataRows)
-                                                    pushModelList.Add(new()
-                                                    {
-                                                        Action = brokerData.ServiceData.Commands[commandKey].CommandText,
-                                                        Email = item.EMAIL,
-                                                        Token = itemToken.String("TOKEN_STR"),
-                                                        Title = MESSAGE_TITLE,
-                                                        Body = MESSAGE_BODY,
-                                                        ImageUrl = brokerData.Response.Status.ToString(),
-                                                        Data = null,
-                                                    });
-                                    }
-                                }
-
+                            this.RequestDefault(brokerData, commandKey, i, sandEmailList, pushModelList);
                             break;
                     }
                 }
@@ -229,6 +111,139 @@ namespace MetaFrm.Service
             response.Status = Status.OK;
 
             return response;
+        }
+        private void RequestDefault(BrokerData brokerData, string commandKey, int index, List<SandEmailModel> sandEmailList, List<PushModel> pushModelList)
+        {
+            string? MESSAGE_TITLE = null;
+            string? MESSAGE_BODY = null;
+            TokenDataTable? tokenDataTable;
+
+            if (brokerData == null)
+                return;
+
+            if (brokerData.ServiceData == null || brokerData.Response == null)
+                return;
+
+            if (brokerData.Response.Status == Status.OK && brokerData.Response.DataSet != null && brokerData.Response.DataSet.DataTables.Count > 0)
+                foreach (var table in brokerData.Response.DataSet.DataTables)
+                    if (table.DataColumns.Any(x => x.FieldName == nameof(MESSAGE_TITLE))
+                        && table.DataColumns.Any(x => x.FieldName == nameof(MESSAGE_BODY))
+                        && table.DataRows.Count > 0)
+                    {
+                        MESSAGE_TITLE = table.DataRows[0].String(nameof(MESSAGE_TITLE));
+                        MESSAGE_BODY = table.DataRows[0].String(nameof(MESSAGE_BODY));
+                        break;
+                    }
+
+            var values = brokerData.ServiceData.Commands[commandKey].Values[index];
+            string? name = null;
+            string? key = null;
+            IEnumerable<PreferencesModel>? preferencesModel = null;
+
+            if (values.TryGetValue("USER_ID", out _))
+            {
+                name = "USER_ID";
+                key = $"Preferences.{values[name].IntValue}";
+                this.LoadPreferences(values[name].IntValue, null);
+            }
+            else if (values.TryGetValue("EMAIL", out _))
+            {
+                name = "EMAIL";
+                key = $"Preferences.{values[name].StringValue}";
+                this.LoadPreferences(null, values[name].StringValue);
+            }
+
+            if (name != null && key != null)
+            {
+                Preferences? preferences1;
+
+                preferences1 = null;
+
+                lock (this.keyValues)
+                    if (key != null && this.keyValues.TryGetValue(key, out object? obj) && obj is Preferences preferences2)
+                        preferences1 = preferences2;
+
+                if (preferences1 != null)
+                    lock (preferences1)
+                    {
+                        if (name == "USER_ID")
+                            preferencesModel = preferences1?.PreferencesList.Where(x => x.USER_ID == values["USER_ID"].IntValue && x.PREFERENCES_KEY == brokerData.ServiceData.Commands[commandKey].CommandText);
+                        else
+                            preferencesModel = preferences1?.PreferencesList.Where(x => x.EMAIL == values["EMAIL"].StringValue && x.PREFERENCES_KEY == brokerData.ServiceData.Commands[commandKey].CommandText);
+
+                        if (preferencesModel != null)
+                            preferencesModel = JsonSerializer.Deserialize<IEnumerable<PreferencesModel>?>(JsonSerializer.Serialize(preferencesModel));
+                    }
+            }
+
+            if (preferencesModel != null)
+                foreach (var item in preferencesModel)
+                {
+                    if (brokerData.Response.Status == Status.OK)
+                    {
+                        if (!MESSAGE_TITLE.IsNullOrEmpty() && !item.OK_TITLE.IsNullOrEmpty() && item.OK_TITLE.Contains("{0}"))
+                            MESSAGE_TITLE = string.Format(item.OK_TITLE, MESSAGE_TITLE);
+                        else
+                            MESSAGE_TITLE = item.OK_TITLE;
+
+                        if (!MESSAGE_BODY.IsNullOrEmpty() && !item.OK_BODY.IsNullOrEmpty() && item.OK_BODY.Contains("{0}"))
+                            MESSAGE_BODY = string.Format(item.OK_BODY, MESSAGE_BODY);
+                        else
+                            MESSAGE_BODY = item.OK_BODY;
+                    }
+                    else
+                    {
+                        if (!MESSAGE_TITLE.IsNullOrEmpty() && !item.FAILED_TITLE.IsNullOrEmpty() && item.FAILED_TITLE.Contains("{0}"))
+                            MESSAGE_TITLE = string.Format(item.FAILED_TITLE, MESSAGE_TITLE);
+                        else
+                            MESSAGE_TITLE = item.FAILED_TITLE;
+
+                        if (brokerData.Response.Message != null)
+                        {
+                            if (!item.FAILED_BODY.IsNullOrEmpty() && item.FAILED_BODY.Contains("{0}"))
+                                MESSAGE_BODY = string.Format(item.FAILED_BODY, brokerData.Response.Message);
+                            else
+                                MESSAGE_BODY = brokerData.Response.Message;
+                        }
+                        else
+                        {
+                            if (!MESSAGE_BODY.IsNullOrEmpty() && !item.FAILED_BODY.IsNullOrEmpty() && item.FAILED_BODY.Contains("{0}"))
+                                MESSAGE_BODY = string.Format(item.FAILED_BODY, MESSAGE_BODY);
+                            else
+                                MESSAGE_BODY = item.FAILED_BODY;
+                        }
+                    }
+
+                    if (item.PREFERENCES_TYPE == nameof(EmailNotification))
+                    {
+                        sandEmailList.Add(new()
+                        {
+                            ACTION = brokerData.ServiceData.Commands[commandKey].CommandText,
+                            EMAIL = item.EMAIL,
+                            SUBJECT = MESSAGE_TITLE,
+                            BODY = MESSAGE_BODY,
+                        });
+                    }
+                    else if (item.PREFERENCES_TYPE == nameof(PushNotification))
+                    {
+                        tokenDataTable = this.GetFirebaseFCM_Token(brokerData.ServiceData.Commands[commandKey].CommandText, item.EMAIL);
+
+                        if (tokenDataTable != null && tokenDataTable.DataTable != null)
+                            lock (tokenDataTable)
+                                foreach (var itemToken in tokenDataTable.DataTable.DataRows)
+                                    pushModelList.Add(new()
+                                    {
+                                        Action = brokerData.ServiceData.Commands[commandKey].CommandText,
+                                        Email = item.EMAIL,
+                                        Token = itemToken.String("TOKEN_STR"),
+                                        Title = MESSAGE_TITLE,
+                                        Body = MESSAGE_BODY,
+                                        ImageUrl = brokerData.Response.Status.ToString(),
+                                        Data = null,
+                                    });
+                    }
+                }
+
         }
 
         private TokenDataTable? GetFirebaseFCM_Token(string ACTION, string? EMAIL)
