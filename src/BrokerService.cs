@@ -96,7 +96,8 @@ namespace MetaFrm.Service
 
                             this.RequestDefault(brokerData, commandKey, i, ref sandEmailList, ref pushModelList);
 
-                            return brokerData.Response;
+                            response = brokerData.Response;
+                            break;
 
                         default:
                             this.RequestDefault(brokerData, commandKey, i, ref sandEmailList, ref pushModelList);
