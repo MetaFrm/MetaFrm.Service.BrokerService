@@ -94,12 +94,12 @@ namespace MetaFrm.Service
 
                             brokerData.Response = ((IService)Factory.CreateInstance(brokerData.ServiceData.ServiceName)).Request(brokerData.ServiceData);
 
-                            this.RequestDefault(brokerData, commandKey, i, sandEmailList, pushModelList);
+                            this.RequestDefault(brokerData, commandKey, i, ref sandEmailList, ref pushModelList);
 
                             return brokerData.Response;
 
                         default:
-                            this.RequestDefault(brokerData, commandKey, i, sandEmailList, pushModelList);
+                            this.RequestDefault(brokerData, commandKey, i, ref sandEmailList, ref pushModelList);
                             break;
                     }
                 }
@@ -112,7 +112,7 @@ namespace MetaFrm.Service
 
             return response;
         }
-        private void RequestDefault(BrokerData brokerData, string commandKey, int index, List<SandEmailModel> sandEmailList, List<PushModel> pushModelList)
+        private void RequestDefault(BrokerData brokerData, string commandKey, int index, ref List<SandEmailModel> sandEmailList, ref List<PushModel> pushModelList)
         {
             string? MESSAGE_TITLE = null;
             string? MESSAGE_BODY = null;
@@ -246,7 +246,6 @@ namespace MetaFrm.Service
                                     });
                     }
                 }
-
         }
 
         private TokenDataTable? GetFirebaseFCM_Token(string ACTION, string? EMAIL)
