@@ -116,6 +116,7 @@ namespace MetaFrm.Service
         {
             string? MESSAGE_TITLE = null;
             string? MESSAGE_BODY = null;
+            string? IMAGE_URL = null;
             TokenDataTable? tokenDataTable;
 
             if (brokerData == null)
@@ -128,10 +129,12 @@ namespace MetaFrm.Service
                 foreach (var table in brokerData.Response.DataSet.DataTables)
                     if (table.DataColumns.Any(x => x.FieldName == nameof(MESSAGE_TITLE))
                         && table.DataColumns.Any(x => x.FieldName == nameof(MESSAGE_BODY))
+                        && table.DataColumns.Any(x => x.FieldName == nameof(IMAGE_URL))
                         && table.DataRows.Count > 0)
                     {
                         MESSAGE_TITLE = table.DataRows[0].String(nameof(MESSAGE_TITLE));
                         MESSAGE_BODY = table.DataRows[0].String(nameof(MESSAGE_BODY));
+                        IMAGE_URL = table.DataRows[0].String(nameof(IMAGE_URL));
                         break;
                     }
 
@@ -238,7 +241,7 @@ namespace MetaFrm.Service
                                         Token = itemToken.String("TOKEN_STR"),
                                         Title = MESSAGE_TITLE,
                                         Body = MESSAGE_BODY,
-                                        ImageUrl = brokerData.Response.Status.ToString(),
+                                        ImageUrl = !IMAGE_URL.IsNullOrEmpty() ? IMAGE_URL : brokerData.Response.Status.ToString(),
                                         Data = null,
                                     });
                     }
