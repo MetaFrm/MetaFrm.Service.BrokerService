@@ -7,7 +7,7 @@ namespace MetaFrm.Service
     /// <summary>
     /// BrokerService
     /// </summary>
-    public class BrokerService : IBrokerService
+    public class BrokerService : IServiceString
     {
         private readonly Dictionary<string, object> keyValues = new();
         private const string EmailNotification = nameof(EmailNotification);
@@ -22,20 +22,19 @@ namespace MetaFrm.Service
             this.ReflashSeconds = -this.GetAttributeInt("ReflashSeconds");
         }
 
-        Response IBrokerService.Request(BrokerData brokerData)
+        string IServiceString.Request(string data)
         {
-            Response response;
             List<SandEmailModel> sandEmailList = new();
             List<PushModel> pushModelList = new();
             TokenDataTable? tokenDataTable;
 
-            response = new();
+            BrokerData? brokerData = JsonSerializer.Deserialize<BrokerData?>(data);
 
             if (brokerData == null)
-                return response;
+                return "";
 
             if (brokerData.ServiceData == null || brokerData.Response == null)
-                return response;
+                return "";
 
             foreach (var commandKey in brokerData.ServiceData.Commands.Keys)
             {
@@ -95,8 +94,6 @@ namespace MetaFrm.Service
                             brokerData.Response = ((IService)Factory.CreateInstance(brokerData.ServiceData.ServiceName)).Request(brokerData.ServiceData);
 
                             this.RequestDefault(brokerData, commandKey, i, ref sandEmailList, ref pushModelList);
-
-                            response = brokerData.Response;
                             break;
 
                         default:
@@ -109,9 +106,7 @@ namespace MetaFrm.Service
             if (sandEmailList.Count > 0) this.SandEmailAsync(sandEmailList);
             if (pushModelList.Count > 0) this.SandPushAsync(pushModelList, brokerData.DateTime);
 
-            response.Status = Status.OK;
-
-            return response;
+            return "";
         }
         private void RequestDefault(BrokerData brokerData, string commandKey, int index, ref List<SandEmailModel> sandEmailList, ref List<PushModel> pushModelList)
         {
