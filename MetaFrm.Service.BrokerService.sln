@@ -11,6 +11,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{
 	ProjectSection(SolutionItems) = preProject
 		.github\workflows\build_6.0.yml = .github\workflows\build_6.0.yml
 		.github\workflows\build_7.0.yml = .github\workflows\build_7.0.yml
+		.github\workflows\build_8.0.yml = .github\workflows\build_8.0.yml
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "솔루션 항목", "솔루션 항목", "{B9C65C5D-11E8-41BE-9905-9D4396DFF062}"
@@ -36,6 +37,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Models", "Models", "{F5DFD5
 		src\Models\TokenDataTable.cs = src\Models\TokenDataTable.cs
 	EndProjectSection
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MetaFrm.Service.BrokerService(net8.0)", "MetaFrm.Service.BrokerService(net8.0)\MetaFrm.Service.BrokerService(net8.0).csproj", "{94024EE0-6148-48D9-B784-BA2D31B53FF2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -50,6 +53,10 @@ Global
 		{72ACBB23-B712-49FE-B708-88CE9766DA14}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{72ACBB23-B712-49FE-B708-88CE9766DA14}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{72ACBB23-B712-49FE-B708-88CE9766DA14}.Release|Any CPU.Build.0 = Release|Any CPU
+		{94024EE0-6148-48D9-B784-BA2D31B53FF2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{94024EE0-6148-48D9-B784-BA2D31B53FF2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{94024EE0-6148-48D9-B784-BA2D31B53FF2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{94024EE0-6148-48D9-B784-BA2D31B53FF2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
