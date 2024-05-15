@@ -213,34 +213,35 @@ namespace MetaFrm.Service
                         }
                     }
 
-                    if (item.PREFERENCES_TYPE == nameof(EmailNotification))
-                    {
-                        sandEmailList.Add(new()
+                    if ((!MESSAGE_TITLE.IsNullOrEmpty() || !MESSAGE_BODY.IsNullOrEmpty()) && (MESSAGE_TITLE != "{0}" || MESSAGE_BODY != "{0}"))
+                        if (item.PREFERENCES_TYPE == nameof(EmailNotification))
                         {
-                            ACTION = brokerData.ServiceData.Commands[commandKey].CommandText,
-                            EMAIL = item.EMAIL,
-                            SUBJECT = MESSAGE_TITLE,
-                            BODY = MESSAGE_BODY,
-                        });
-                    }
-                    else if (item.PREFERENCES_TYPE == nameof(PushNotification))
-                    {
-                        tokenDataTable = this.GetFirebaseFCM_Token(brokerData.ServiceData.Commands[commandKey].CommandText, item.EMAIL);
+                            sandEmailList.Add(new()
+                            {
+                                ACTION = brokerData.ServiceData.Commands[commandKey].CommandText,
+                                EMAIL = item.EMAIL,
+                                SUBJECT = MESSAGE_TITLE,
+                                BODY = MESSAGE_BODY,
+                            });
+                        }
+                        else if (item.PREFERENCES_TYPE == nameof(PushNotification))
+                        {
+                            tokenDataTable = this.GetFirebaseFCM_Token(brokerData.ServiceData.Commands[commandKey].CommandText, item.EMAIL);
 
-                        if (tokenDataTable != null && tokenDataTable.DataTable != null)
-                            lock (tokenDataTable)
-                                foreach (var itemToken in tokenDataTable.DataTable.DataRows)
-                                    pushModelList.Add(new()
-                                    {
-                                        Action = brokerData.ServiceData.Commands[commandKey].CommandText,
-                                        Email = item.EMAIL,
-                                        Token = itemToken.String("TOKEN_STR"),
-                                        Title = MESSAGE_TITLE,
-                                        Body = MESSAGE_BODY,
-                                        ImageUrl = !IMAGE_URL.IsNullOrEmpty() ? IMAGE_URL : brokerData.Response.Status.ToString(),
-                                        Data = null,
-                                    });
-                    }
+                            if (tokenDataTable != null && tokenDataTable.DataTable != null)
+                                lock (tokenDataTable)
+                                    foreach (var itemToken in tokenDataTable.DataTable.DataRows)
+                                        pushModelList.Add(new()
+                                        {
+                                            Action = brokerData.ServiceData.Commands[commandKey].CommandText,
+                                            Email = item.EMAIL,
+                                            Token = itemToken.String("TOKEN_STR"),
+                                            Title = MESSAGE_TITLE,
+                                            Body = MESSAGE_BODY,
+                                            ImageUrl = !IMAGE_URL.IsNullOrEmpty() ? IMAGE_URL : brokerData.Response.Status.ToString(),
+                                            Data = null,
+                                        });
+                        }
                 }
         }
 
@@ -496,10 +497,10 @@ namespace MetaFrm.Service
                             PREFERENCES_TYPE = item.String(nameof(PreferencesModel.PREFERENCES_TYPE)),
                             PREFERENCES_KEY = item.String(nameof(PreferencesModel.PREFERENCES_KEY)),
                             PREFERENCES_VALUE = item.String(nameof(PreferencesModel.PREFERENCES_VALUE)),
-                            OK_TITLE = item.String(nameof(PreferencesModel.OK_TITLE)),
-                            OK_BODY = item.String(nameof(PreferencesModel.OK_BODY)),
-                            FAILED_TITLE = item.String(nameof(PreferencesModel.FAILED_TITLE)),
-                            FAILED_BODY = item.String(nameof(PreferencesModel.FAILED_BODY)),
+                            OK_TITLE = item.String(nameof(PreferencesModel.OK_TITLE)) ?? "",
+                            OK_BODY = item.String(nameof(PreferencesModel.OK_BODY)) ?? "",
+                            FAILED_TITLE = item.String(nameof(PreferencesModel.FAILED_TITLE)) ?? "",
+                            FAILED_BODY = item.String(nameof(PreferencesModel.FAILED_BODY)) ?? "",
                         });
             }
             else
