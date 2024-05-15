@@ -241,8 +241,8 @@ namespace MetaFrm.Service
                                         Action = brokerData.ServiceData.Commands[commandKey].CommandText,
                                         Email = item.EMAIL,
                                         Token = itemToken.String("TOKEN_STR"),
-                                        Title = MESSAGE_TITLE,
-                                        Body = MESSAGE_BODY,
+                                        Title = $"_{MESSAGE_TITLE}_",
+                                        Body = $"_{MESSAGE_BODY}_",
                                         ImageUrl = !IMAGE_URL.IsNullOrEmpty() ? IMAGE_URL : brokerData.Response.Status.ToString(),
                                         Data = null,
                                     });
