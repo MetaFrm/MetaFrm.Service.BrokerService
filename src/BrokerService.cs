@@ -213,35 +213,40 @@ namespace MetaFrm.Service
                         }
                     }
 
-                    if ((!MESSAGE_TITLE.IsNullOrEmpty() || !MESSAGE_BODY.IsNullOrEmpty()) && (MESSAGE_TITLE != "{0}" || MESSAGE_BODY != "{0}"))
-                        if (item.PREFERENCES_TYPE == nameof(EmailNotification))
-                        {
-                            sandEmailList.Add(new()
-                            {
-                                ACTION = brokerData.ServiceData.Commands[commandKey].CommandText,
-                                EMAIL = item.EMAIL,
-                                SUBJECT = MESSAGE_TITLE,
-                                BODY = MESSAGE_BODY,
-                            });
-                        }
-                        else if (item.PREFERENCES_TYPE == nameof(PushNotification))
-                        {
-                            tokenDataTable = this.GetFirebaseFCM_Token(brokerData.ServiceData.Commands[commandKey].CommandText, item.EMAIL);
+                    if (MESSAGE_TITLE == "{0}" && MESSAGE_BODY == "{0}")
+                        return;
 
-                            if (tokenDataTable != null && tokenDataTable.DataTable != null)
-                                lock (tokenDataTable)
-                                    foreach (var itemToken in tokenDataTable.DataTable.DataRows)
-                                        pushModelList.Add(new()
-                                        {
-                                            Action = brokerData.ServiceData.Commands[commandKey].CommandText,
-                                            Email = item.EMAIL,
-                                            Token = itemToken.String("TOKEN_STR"),
-                                            Title = MESSAGE_TITLE,
-                                            Body = MESSAGE_BODY,
-                                            ImageUrl = !IMAGE_URL.IsNullOrEmpty() ? IMAGE_URL : brokerData.Response.Status.ToString(),
-                                            Data = null,
-                                        });
-                        }
+                    if (MESSAGE_TITLE.IsNullOrEmpty() && MESSAGE_BODY.IsNullOrEmpty())
+                        return;
+
+                    if (item.PREFERENCES_TYPE == nameof(EmailNotification))
+                    {
+                        sandEmailList.Add(new()
+                        {
+                            ACTION = brokerData.ServiceData.Commands[commandKey].CommandText,
+                            EMAIL = item.EMAIL,
+                            SUBJECT = MESSAGE_TITLE,
+                            BODY = MESSAGE_BODY,
+                        });
+                    }
+                    else if (item.PREFERENCES_TYPE == nameof(PushNotification))
+                    {
+                        tokenDataTable = this.GetFirebaseFCM_Token(brokerData.ServiceData.Commands[commandKey].CommandText, item.EMAIL);
+
+                        if (tokenDataTable != null && tokenDataTable.DataTable != null)
+                            lock (tokenDataTable)
+                                foreach (var itemToken in tokenDataTable.DataTable.DataRows)
+                                    pushModelList.Add(new()
+                                    {
+                                        Action = brokerData.ServiceData.Commands[commandKey].CommandText,
+                                        Email = item.EMAIL,
+                                        Token = itemToken.String("TOKEN_STR"),
+                                        Title = MESSAGE_TITLE,
+                                        Body = MESSAGE_BODY,
+                                        ImageUrl = !IMAGE_URL.IsNullOrEmpty() ? IMAGE_URL : brokerData.Response.Status.ToString(),
+                                        Data = null,
+                                    });
+                    }
                 }
         }
 
