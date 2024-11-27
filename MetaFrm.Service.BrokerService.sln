@@ -3,15 +3,12 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.7.34031.279
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MetaFrm.Service.BrokerService(net6.0)", "MetaFrm.Service.BrokerService(net6.0)\MetaFrm.Service.BrokerService(net6.0).csproj", "{A98FF0BD-8D2C-4FCA-9A6A-B94C997FF1F8}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".github", ".github", "{45324ECC-1D72-45C6-A49C-D0BD91327EA7}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{22B15BE9-F62A-43C0-83C6-CD024B76704A}"
 	ProjectSection(SolutionItems) = preProject
-		.github\workflows\build_6.0.yml = .github\workflows\build_6.0.yml
-		.github\workflows\build_7.0.yml = .github\workflows\build_7.0.yml
 		.github\workflows\build_8.0.yml = .github\workflows\build_8.0.yml
+		.github\workflows\build_9.0.yml = .github\workflows\build_9.0.yml
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "솔루션 항목", "솔루션 항목", "{B9C65C5D-11E8-41BE-9905-9D4396DFF062}"
@@ -26,8 +23,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{8FE1BBB7-857
 		src\BrokerService.cs = src\BrokerService.cs
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MetaFrm.Service.BrokerService(net7.0)", "MetaFrm.Service.BrokerService(net7.0)\MetaFrm.Service.BrokerService(net7.0).csproj", "{72ACBB23-B712-49FE-B708-88CE9766DA14}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Models", "Models", "{F5DFD552-ABD6-4284-8012-9D302ADDBA2F}"
 	ProjectSection(SolutionItems) = preProject
 		src\Models\Preferences.cs = src\Models\Preferences.cs
@@ -39,24 +34,22 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Models", "Models", "{F5DFD5
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MetaFrm.Service.BrokerService(net8.0)", "MetaFrm.Service.BrokerService(net8.0)\MetaFrm.Service.BrokerService(net8.0).csproj", "{94024EE0-6148-48D9-B784-BA2D31B53FF2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MetaFrm.Service.BrokerService(net9.0)", "MetaFrm.Service.BrokerService(net9.0)\MetaFrm.Service.BrokerService(net9.0).csproj", "{C094B2A0-8CED-4AEA-9878-F04C3585C2EF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{A98FF0BD-8D2C-4FCA-9A6A-B94C997FF1F8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A98FF0BD-8D2C-4FCA-9A6A-B94C997FF1F8}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A98FF0BD-8D2C-4FCA-9A6A-B94C997FF1F8}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A98FF0BD-8D2C-4FCA-9A6A-B94C997FF1F8}.Release|Any CPU.Build.0 = Release|Any CPU
-		{72ACBB23-B712-49FE-B708-88CE9766DA14}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{72ACBB23-B712-49FE-B708-88CE9766DA14}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{72ACBB23-B712-49FE-B708-88CE9766DA14}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{72ACBB23-B712-49FE-B708-88CE9766DA14}.Release|Any CPU.Build.0 = Release|Any CPU
 		{94024EE0-6148-48D9-B784-BA2D31B53FF2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{94024EE0-6148-48D9-B784-BA2D31B53FF2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{94024EE0-6148-48D9-B784-BA2D31B53FF2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{94024EE0-6148-48D9-B784-BA2D31B53FF2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C094B2A0-8CED-4AEA-9878-F04C3585C2EF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C094B2A0-8CED-4AEA-9878-F04C3585C2EF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C094B2A0-8CED-4AEA-9878-F04C3585C2EF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C094B2A0-8CED-4AEA-9878-F04C3585C2EF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
