@@ -1,5 +1,8 @@
 ﻿using MetaFrm.Database;
 using MetaFrm.Models;
+using Microsoft.Extensions.Logging;
+using System.Collections.Concurrent;
+using System.Net;
 using System.Text.Json;
 
 namespace MetaFrm.Service
@@ -9,7 +12,7 @@ namespace MetaFrm.Service
     /// </summary>
     public class BrokerService : IServiceString
     {
-        private readonly Dictionary<string, object> keyValues = new();
+        private readonly ConcurrentDictionary<string, object> keyValues = [];
         private const string EmailNotification = nameof(EmailNotification);
         private const string PushNotification = nameof(PushNotification);
         private readonly int ReflashSeconds;
@@ -24,8 +27,8 @@ namespace MetaFrm.Service
 
         string IServiceString.Request(string data)
         {
-            List<SandEmailModel> sandEmailList = new();
-            List<PushModel> pushModelList = new();
+            List<SandEmailModel> sandEmailList = [];
+            List<PushModel> pushModelList = [];
             TokenDataTable? tokenDataTable;
 
             BrokerData? brokerData = JsonSerializer.Deserialize<BrokerData?>(data);
@@ -158,9 +161,8 @@ namespace MetaFrm.Service
 
                 preferences1 = null;
 
-                lock (this.keyValues)
-                    if (key != null && this.keyValues.TryGetValue(key, out object? obj) && obj is Preferences preferences2)
-                        preferences1 = preferences2;
+                if (key != null && this.keyValues.TryGetValue(key, out object? obj) && obj is Preferences preferences2)
+                    preferences1 = preferences2;
 
                 if (preferences1 != null)
                     lock (preferences1)
@@ -260,14 +262,14 @@ namespace MetaFrm.Service
             key = $"Token.{EMAIL}";
             tokenDataTable = null;
 
-            lock (this.keyValues)
+            if (!this.keyValues.TryGetValue(key, out object? obj1))
             {
-                if (!this.keyValues.TryGetValue(key, out _))
-                    this.keyValues.Add(key, new TokenDataTable(DateTime.Now.AddSeconds(this.ReflashSeconds)));//1분   2분5초-1분=>1분5초
-
-                if (this.keyValues[key] is TokenDataTable tokenDataTable1)
-                    tokenDataTable = tokenDataTable1;
+                tokenDataTable = new TokenDataTable(DateTime.Now.AddSeconds(this.ReflashSeconds));//1분   2분5초-1분=>1분5초
+                if (!this.keyValues.TryAdd(key, tokenDataTable))
+                    Factory.Logger.LogError("GetFirebaseFCM_Token TryAdd Fail : {key}", key);
             }
+            else if (obj1 is TokenDataTable tokenDataTable1)
+                tokenDataTable = tokenDataTable1;
 
             if (tokenDataTable != null && (tokenDataTable.DateTime <= DateTime.Now.AddSeconds(this.ReflashSeconds) || tokenDataTable.DataTable == null))
             {
@@ -288,26 +290,19 @@ namespace MetaFrm.Service
                 {
                     if (response.DataSet != null && response.DataSet.DataTables.Count > 0)
                     {
-                        Console.WriteLine("Get FirebaseFCM Token Completed !!");
+                        tokenDataTable.DataTable = response.DataSet.DataTables[0];
+                        tokenDataTable.DateTime = DateTime.Now;
 
-                        lock (tokenDataTable)
-                        {
-                            tokenDataTable.DataTable = response.DataSet.DataTables[0];
-                            tokenDataTable.DateTime = DateTime.Now;
-                        }
                         return tokenDataTable;
                     }
                 }
                 else
-                {
-                    if (response.Message != null)
-                        Console.WriteLine(response.Message);
-                }
+                    Factory.Logger.LogError("GetFirebaseFCM_Token Request Fail : {key} {Message}", key, response.Message);
 
-                Console.WriteLine("Get FirebaseFCM Token  Fail !!");
+                Factory.Logger.LogError("Get FirebaseFCM Token Fail !! : {key}", key);
             }
-            else if (this.keyValues[key] is TokenDataTable tokenDataTable2)
-                return tokenDataTable2;
+            else
+                return tokenDataTable;
 
             return null;
         }
@@ -335,9 +330,8 @@ namespace MetaFrm.Service
             key = $"Preferences.{pushModelList[0].Email}";
             preferences = null;
 
-            lock (this.keyValues)
-                if (pushModelList[0].Action != nameof(PushNotification) && this.keyValues.TryGetValue(key, out object? obj) && obj is Preferences preferences1)
-                    preferences = preferences1;
+            if (pushModelList[0].Action != nameof(PushNotification) && this.keyValues.TryGetValue(key, out object? obj) && obj is Preferences preferences1)
+                preferences = preferences1;
 
             foreach (var item in pushModelList)
             {
@@ -363,7 +357,7 @@ namespace MetaFrm.Service
             response = service.Request(serviceData);
 
             if (response.Status != Status.OK && response.Message != null)
-                Console.WriteLine(response.Message);
+                Factory.Logger.LogError("SandPushAsync Request Fail : {key} {Message}", key, response.Message);
         }
         private void SandEmailAsync(List<SandEmailModel> sandEmailList)
         {
@@ -386,9 +380,8 @@ namespace MetaFrm.Service
             key = $"Preferences.{sandEmailList[0].EMAIL}";
             preferences = null;
 
-            lock (this.keyValues)
-                if (sandEmailList[0].ACTION != nameof(EmailNotification) && this.keyValues.TryGetValue(key, out object? obj) && obj is Preferences preferences1)
-                    preferences = preferences1;
+            if (sandEmailList[0].ACTION != nameof(EmailNotification) && this.keyValues.TryGetValue(key, out object? obj) && obj is Preferences preferences1)
+                preferences = preferences1;
 
             foreach (var item in sandEmailList)
             {
@@ -412,60 +405,49 @@ namespace MetaFrm.Service
             response = service.Request(serviceData);
 
             if (response.Status != Status.OK && response.Message != null)
-                Console.WriteLine(response.Message);
+                Factory.Logger.LogError("SandEmailAsync Request Fail : {key} {Message}", key, response.Message);
         }
 
         private void LoadPreferences(int? USER_ID, string? EMAIL)
         {
             string key;
-            object? obj;
-            List<PreferencesModel> preferencesModelList;
 
             if (USER_ID != null)
                 key = $"Preferences.{USER_ID}";
             else
                 key = $"Preferences.{EMAIL}";
 
-            obj = null;
-
-            lock (this.keyValues)
-                if (!this.keyValues.TryGetValue(key, out obj))
-                {
-                    obj = new Preferences(DateTime.Now.AddSeconds(this.ReflashSeconds));//1분   2분5초-1분=>1분5초
-                    this.keyValues.Add(key, obj);
-                }
+            if (!this.keyValues.TryGetValue(key, out object? obj))
+            {
+                obj = new Preferences(DateTime.Now.AddSeconds(this.ReflashSeconds));//1분   2분5초-1분=>1분5초
+                if (!this.keyValues.TryAdd(key, obj))
+                    Factory.Logger.LogError("LoadPreferences TryAdd Fail : {key}", key);
+            }
 
             if (obj != null && obj is Preferences preferences && (preferences.DateTime <= DateTime.Now.AddSeconds(this.ReflashSeconds) || preferences.PreferencesList.Count < 1))
             {
-                preferencesModelList = this.LoadPreferencesDB(USER_ID, EMAIL);
-
-                lock (preferences)
-                {
-                    preferences.PreferencesList.Clear();
-                    preferences.PreferencesList = preferencesModelList;
-                    preferences.DateTime = DateTime.Now;
-                }
+                preferences.PreferencesList.Clear();
+                preferences.PreferencesList = this.LoadPreferencesDB(USER_ID, EMAIL);
+                preferences.DateTime = DateTime.Now;
 
                 if (USER_ID != null)
                 {
-                    if (preferencesModelList.Count > 0)
+                    if (preferences.PreferencesList.Count > 0)
                     {
-                        key = $"Preferences.{preferencesModelList[0].EMAIL}";
+                        key = $"Preferences.{preferences.PreferencesList[0].EMAIL}";
 
-                        lock (this.keyValues)
-                            if (!this.keyValues.TryGetValue(key, out obj))
-                                this.keyValues.Add(key, preferences);
+                        if (!this.keyValues.TryAdd(key, preferences))
+                            Factory.Logger.LogError("LoadPreferences keyValues TryAdd Fail : {key}", key);
                     }
                 }
                 else
                 {
-                    if (preferencesModelList.Count > 0 && preferencesModelList[0].USER_ID > 0)
+                    if (preferences.PreferencesList.Count > 0 && preferences.PreferencesList[0].USER_ID > 0)
                     {
-                        key = $"Preferences.{preferencesModelList[0].USER_ID}";
+                        key = $"Preferences.{preferences.PreferencesList[0].USER_ID}";
 
-                        lock (this.keyValues)
-                            if (!this.keyValues.TryGetValue(key, out obj))
-                                this.keyValues.Add(key, preferences);
+                        if (!this.keyValues.TryAdd(key, preferences))
+                            Factory.Logger.LogError("LoadPreferences keyValues TryAdd Fail : {key}", key);
                     }
                 }
             }
@@ -474,7 +456,7 @@ namespace MetaFrm.Service
         {
             IService service;
             Response response;
-            List<PreferencesModel> preferences = new();
+            List<PreferencesModel> preferences = [];
 
             ServiceData serviceData = new()
             {
@@ -509,10 +491,7 @@ namespace MetaFrm.Service
                         });
             }
             else
-            {
-                if (response.Message != null)
-                    Console.WriteLine(response.Message);
-            }
+                Factory.Logger.LogError("LoadPreferencesDB Request Fail : {USER_ID} {EMAIL} {Message}", USER_ID, EMAIL, response.Message);
 
             return preferences;
         }

@@ -1,14 +1,9 @@
 ﻿namespace MetaFrm.Models
 {
-    internal class Preferences : ICore
+    internal class Preferences(DateTime dateTime) : ICore
     {
-        public DateTime DateTime { get; set; }
+        public DateTime DateTime { get; set; } = dateTime;
 
-        public List<PreferencesModel> PreferencesList { get; set; } = new();
-
-        public Preferences(DateTime dateTime)
-        {
-            DateTime = dateTime;
-        }
+        public List<PreferencesModel> PreferencesList { get; set; } = [];
     }
 }
