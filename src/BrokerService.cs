@@ -436,7 +436,7 @@ namespace MetaFrm.Service
                     {
                         key = $"Preferences.{preferences.PreferencesList[0].EMAIL}";
 
-                        if (!this.keyValues.TryAdd(key, preferences))
+                        if (!this.keyValues.TryGetValue(key, out var _) && !this.keyValues.TryAdd(key, preferences))
                             Factory.Logger.LogError("LoadPreferences keyValues TryAdd Fail : {key}", key);
                     }
                 }
@@ -446,7 +446,7 @@ namespace MetaFrm.Service
                     {
                         key = $"Preferences.{preferences.PreferencesList[0].USER_ID}";
 
-                        if (!this.keyValues.TryAdd(key, preferences))
+                        if (!this.keyValues.TryGetValue(key, out var _) && !this.keyValues.TryAdd(key, preferences))
                             Factory.Logger.LogError("LoadPreferences keyValues TryAdd Fail : {key}", key);
                     }
                 }
