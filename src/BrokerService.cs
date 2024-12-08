@@ -2,7 +2,6 @@
 using MetaFrm.Models;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
-using System.Net;
 using System.Text.Json;
 
 namespace MetaFrm.Service
@@ -165,16 +164,12 @@ namespace MetaFrm.Service
                     preferences1 = preferences2;
 
                 if (preferences1 != null)
-                    lock (preferences1)
-                    {
-                        if (name == "USER_ID")
-                            preferencesModel = preferences1?.PreferencesList.Where(x => x.USER_ID == values["USER_ID"].IntValue && x.PREFERENCES_KEY == brokerData.ServiceData.Commands[commandKey].CommandText);
-                        else
-                            preferencesModel = preferences1?.PreferencesList.Where(x => x.EMAIL == values["EMAIL"].StringValue && x.PREFERENCES_KEY == brokerData.ServiceData.Commands[commandKey].CommandText);
-
-                        if (preferencesModel != null)
-                            preferencesModel = JsonSerializer.Deserialize<IEnumerable<PreferencesModel>?>(JsonSerializer.Serialize(preferencesModel));
-                    }
+                {
+                    if (name == "USER_ID")
+                        preferencesModel = preferences1?.PreferencesList.Where(x => x.USER_ID == values["USER_ID"].IntValue && x.PREFERENCES_KEY == brokerData.ServiceData.Commands[commandKey].CommandText);
+                    else
+                        preferencesModel = preferences1?.PreferencesList.Where(x => x.EMAIL == values["EMAIL"].StringValue && x.PREFERENCES_KEY == brokerData.ServiceData.Commands[commandKey].CommandText);
+                }
             }
 
             if (preferencesModel != null)
@@ -236,18 +231,17 @@ namespace MetaFrm.Service
                         tokenDataTable = this.GetFirebaseFCM_Token(brokerData.ServiceData.Commands[commandKey].CommandText, item.EMAIL);
 
                         if (tokenDataTable != null && tokenDataTable.DataTable != null)
-                            lock (tokenDataTable)
-                                foreach (var itemToken in tokenDataTable.DataTable.DataRows)
-                                    pushModelList.Add(new()
-                                    {
-                                        Action = brokerData.ServiceData.Commands[commandKey].CommandText,
-                                        Email = item.EMAIL,
-                                        Token = itemToken.String("TOKEN_STR"),
-                                        Title = MESSAGE_TITLE,
-                                        Body = MESSAGE_BODY,
-                                        ImageUrl = !IMAGE_URL.IsNullOrEmpty() ? IMAGE_URL : brokerData.Response.Status.ToString(),
-                                        Data = null,
-                                    });
+                            foreach (var itemToken in tokenDataTable.DataTable.DataRows)
+                                pushModelList.Add(new()
+                                {
+                                    Action = brokerData.ServiceData.Commands[commandKey].CommandText,
+                                    Email = item.EMAIL,
+                                    Token = itemToken.String("TOKEN_STR"),
+                                    Title = MESSAGE_TITLE,
+                                    Body = MESSAGE_BODY,
+                                    ImageUrl = !IMAGE_URL.IsNullOrEmpty() ? IMAGE_URL : brokerData.Response.Status.ToString(),
+                                    Data = null,
+                                });
                     }
                 }
         }
@@ -336,13 +330,12 @@ namespace MetaFrm.Service
             foreach (var item in pushModelList)
             {
                 if (item.Action != nameof(PushNotification) && preferences != null)
-                    lock (preferences)
-                    {
-                        var itemPreferences = preferences.PreferencesList.SingleOrDefault(x => x.EMAIL == item.Email && x.PREFERENCES_TYPE == nameof(PushNotification) && x.PREFERENCES_KEY == item.Action);
+                {
+                    var itemPreferences = preferences.PreferencesList.SingleOrDefault(x => x.EMAIL == item.Email && x.PREFERENCES_TYPE == nameof(PushNotification) && x.PREFERENCES_KEY == item.Action);
 
-                        if (itemPreferences == null || itemPreferences.PREFERENCES_VALUE == "N")
-                            continue;
-                    }
+                    if (itemPreferences == null || itemPreferences.PREFERENCES_VALUE == "N")
+                        continue;
+                }
 
                 serviceData["1"].NewRow();
                 serviceData["1"].SetValue(nameof(PushModel.Token), item.Token);
@@ -386,13 +379,12 @@ namespace MetaFrm.Service
             foreach (var item in sandEmailList)
             {
                 if (item.ACTION != nameof(EmailNotification) && preferences != null)
-                    lock (preferences)
-                    {
-                        var itemPreferences = preferences.PreferencesList.SingleOrDefault(x => x.EMAIL == item.EMAIL && x.PREFERENCES_TYPE == nameof(EmailNotification) && x.PREFERENCES_KEY == item.ACTION);
+                {
+                    var itemPreferences = preferences.PreferencesList.SingleOrDefault(x => x.EMAIL == item.EMAIL && x.PREFERENCES_TYPE == nameof(EmailNotification) && x.PREFERENCES_KEY == item.ACTION);
 
-                        if (itemPreferences == null || itemPreferences.PREFERENCES_VALUE == "N")
-                            continue;
-                    }
+                    if (itemPreferences == null || itemPreferences.PREFERENCES_VALUE == "N")
+                        continue;
+                }
 
                 serviceData["1"].NewRow();
                 serviceData["1"].SetValue(nameof(SandEmailModel.ACTION), item.ACTION);
