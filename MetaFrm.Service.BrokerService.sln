@@ -1,12 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.7.34031.279
+# Visual Studio Version 18
+VisualStudioVersion = 18.0.11205.157 d18.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".github", ".github", "{45324ECC-1D72-45C6-A49C-D0BD91327EA7}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{22B15BE9-F62A-43C0-83C6-CD024B76704A}"
 	ProjectSection(SolutionItems) = preProject
+		.github\workflows\build_10.0.yml = .github\workflows\build_10.0.yml
 		.github\workflows\build_8.0.yml = .github\workflows\build_8.0.yml
 		.github\workflows\build_9.0.yml = .github\workflows\build_9.0.yml
 	EndProjectSection
@@ -36,6 +37,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MetaFrm.Service.BrokerServi
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MetaFrm.Service.BrokerService(net9.0)", "MetaFrm.Service.BrokerService(net9.0)\MetaFrm.Service.BrokerService(net9.0).csproj", "{C094B2A0-8CED-4AEA-9878-F04C3585C2EF}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MetaFrm.Service.BrokerService(net10.0)", "MetaFrm.Service.BrokerService(net10.0)\MetaFrm.Service.BrokerService(net10.0).csproj", "{D4B1B23E-E1AA-6A83-B24D-09A94DEEDB3C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -50,6 +53,10 @@ Global
 		{C094B2A0-8CED-4AEA-9878-F04C3585C2EF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C094B2A0-8CED-4AEA-9878-F04C3585C2EF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C094B2A0-8CED-4AEA-9878-F04C3585C2EF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D4B1B23E-E1AA-6A83-B24D-09A94DEEDB3C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D4B1B23E-E1AA-6A83-B24D-09A94DEEDB3C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D4B1B23E-E1AA-6A83-B24D-09A94DEEDB3C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D4B1B23E-E1AA-6A83-B24D-09A94DEEDB3C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
