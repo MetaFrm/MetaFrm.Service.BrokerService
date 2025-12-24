@@ -12,8 +12,10 @@ namespace MetaFrm.Service
     public class BrokerService : IServiceString
     {
         private readonly ConcurrentDictionary<string, object> keyValues = [];
-        private const string EmailNotification = nameof(EmailNotification);
-        private const string PushNotification = nameof(PushNotification);
+        private readonly string EmailNotification = nameof(EmailNotification);
+        private readonly string PushNotification = nameof(PushNotification);
+        private readonly string USER_ID = nameof(USER_ID);
+        private readonly string EMAIL = nameof(EMAIL);
         private readonly int ReflashSeconds;
 
         /// <summary>
@@ -35,63 +37,64 @@ namespace MetaFrm.Service
             if (brokerData == null)
                 return "";
 
-            if (brokerData.ServiceData == null || brokerData.Response == null)
+            if (brokerData.ServiceData == null)
                 return "";
 
             foreach (var commandKey in brokerData.ServiceData.Commands.Keys)
             {
-                for (int i = 0; i < brokerData.ServiceData.Commands[commandKey].Values.Count; i++)
+                Command command = brokerData.ServiceData.Commands[commandKey];
+                for (int i = 0; i < command.Values.Count; i++)
                 {
-                    switch (brokerData.ServiceData.Commands[commandKey].CommandText)
+                    switch (command.CommandText)
                     {
-                        case nameof(EmailNotification):
-                            var valuesEmail = brokerData.ServiceData.Commands[commandKey].Values[i];
+                        case nameof(this.EmailNotification):
+                            var valuesEmail = command.Values[i];
 
-                            if (valuesEmail.TryGetValue(nameof(SandEmailModel.EMAIL), out _)
-                                && valuesEmail.TryGetValue(nameof(SandEmailModel.SUBJECT), out _)
-                                && valuesEmail.TryGetValue(nameof(SandEmailModel.BODY), out _))
-                                if (!valuesEmail[nameof(SandEmailModel.EMAIL)].StringValue.IsNullOrEmpty())
+                            if (valuesEmail.TryGetValue(nameof(SandEmailModel.EMAIL), out Data.DataValue? email1)
+                                && valuesEmail.TryGetValue(nameof(SandEmailModel.SUBJECT), out Data.DataValue? subject1)
+                                && valuesEmail.TryGetValue(nameof(SandEmailModel.BODY), out Data.DataValue? body1))
+                                if (!email1.StringValue.IsNullOrEmpty())
                                 {
                                     sandEmailList.Add(new()
                                     {
-                                        ACTION = brokerData.ServiceData.Commands[commandKey].CommandText,
-                                        EMAIL = valuesEmail[nameof(SandEmailModel.EMAIL)].StringValue,
-                                        SUBJECT = valuesEmail[nameof(SandEmailModel.SUBJECT)].StringValue,
-                                        BODY = valuesEmail[nameof(SandEmailModel.BODY)].StringValue,
+                                        ACTION = command.CommandText,
+                                        EMAIL = email1.StringValue,
+                                        SUBJECT = subject1.StringValue,
+                                        BODY = body1.StringValue,
                                     });
                                 }
 
                             break;
 
-                        case nameof(PushNotification):
-                            var valuesPush = brokerData.ServiceData.Commands[commandKey].Values[i];
+                        case nameof(this.PushNotification):
+                            var valuesPush = command.Values[i];
 
-                            if (valuesPush.TryGetValue(nameof(PushModel.Email), out _)
-                                && valuesPush.TryGetValue(nameof(PushModel.Title), out _)
-                                && valuesPush.TryGetValue(nameof(PushModel.Body), out _)
-                                && valuesPush.TryGetValue(nameof(PushModel.ImageUrl), out _)
-                                && valuesPush.TryGetValue(nameof(PushModel.Data), out _))
-                                if (!valuesPush[nameof(PushModel.Email)].StringValue.IsNullOrEmpty())
+                            if (valuesPush.TryGetValue(nameof(PushModel.Email), out Data.DataValue? email2)
+                                && valuesPush.TryGetValue(nameof(PushModel.Title), out Data.DataValue? title2)
+                                && valuesPush.TryGetValue(nameof(PushModel.Body), out Data.DataValue? body2)
+                                && valuesPush.TryGetValue(nameof(PushModel.ImageUrl), out Data.DataValue? imageUrl2)
+                                && valuesPush.TryGetValue(nameof(PushModel.Data), out Data.DataValue? data2))
+                                if (!email2.StringValue.IsNullOrEmpty())
                                 {
-                                    tokenDataTable = this.GetFirebaseFCM_Token(brokerData.ServiceData.Commands[commandKey].CommandText, valuesPush[nameof(PushModel.Email)].StringValue);
+                                    tokenDataTable = this.GetFirebaseFCM_Token(command.CommandText, email2.StringValue);
 
                                     if (tokenDataTable != null && tokenDataTable.DataTable != null)
                                         foreach (var item in tokenDataTable.DataTable.DataRows)
                                             pushModelList.Add(new()
                                             {
-                                                Action = brokerData.ServiceData.Commands[commandKey].CommandText,
-                                                Email = valuesPush[nameof(PushModel.Email)].StringValue,
+                                                Action = command.CommandText,
+                                                Email = email2.StringValue,
                                                 Token = item.String("TOKEN_STR"),
-                                                Title = valuesPush[nameof(PushModel.Title)].StringValue,
-                                                Body = valuesPush[nameof(PushModel.Body)].StringValue,
-                                                ImageUrl = valuesPush[nameof(PushModel.ImageUrl)].StringValue,
-                                                Data = valuesPush[nameof(PushModel.Data)].StringValue,
+                                                Title = title2.StringValue,
+                                                Body = body2.StringValue,
+                                                ImageUrl = imageUrl2.StringValue,
+                                                Data = data2.StringValue,
                                             });
                                 }
                             break;
                         case string tmp when tmp.StartsWith("Batch."):
                             brokerData.ServiceData.ServiceName = Factory.ProjectService.ServiceNamespace;
-                            brokerData.ServiceData.Commands[commandKey].CommandText = brokerData.ServiceData.Commands[commandKey].CommandText.Replace("Batch.", "");
+                            command.CommandText = command.CommandText.Replace("Batch.", "");
 
                             brokerData.Response = ((IService)Factory.CreateInstance(brokerData.ServiceData.ServiceName)).Request(brokerData.ServiceData);
 
@@ -105,8 +108,8 @@ namespace MetaFrm.Service
                 }
             }
 
-            if (sandEmailList.Count > 0) this.SandEmailAsync(sandEmailList);
-            if (pushModelList.Count > 0) this.SandPushAsync(pushModelList, brokerData.DateTime);
+            if (sandEmailList.Count > 0) this.SandEmail(sandEmailList);
+            if (pushModelList.Count > 0) this.SandPush(pushModelList, brokerData.DateTime);
 
             return "";
         }
@@ -116,9 +119,7 @@ namespace MetaFrm.Service
             string? MESSAGE_BODY = null;
             string? IMAGE_URL = null;
             TokenDataTable? tokenDataTable;
-
-            if (brokerData == null)
-                return;
+            Command command;
 
             if (brokerData.ServiceData == null || brokerData.Response == null)
                 return;
@@ -136,114 +137,112 @@ namespace MetaFrm.Service
                         break;
                     }
 
-            var values = brokerData.ServiceData.Commands[commandKey].Values[index];
+            command = brokerData.ServiceData.Commands[commandKey];
+
+            var values = command.Values[index];
             string? name = null;
             string? key = null;
-            IEnumerable<PreferencesModel>? preferencesModel = null;
 
-            if (values.TryGetValue("USER_ID", out _))
+            if (values.TryGetValue(this.USER_ID, out Data.DataValue? _userID))
             {
-                name = "USER_ID";
-                key = $"Preferences.{values[name].IntValue}";
-                this.LoadPreferences(values[name].IntValue, null);
+                name = this.USER_ID;
+                key = $"Preferences.{_userID.IntValue}";
+                this.LoadPreferences(_userID.IntValue, null);
             }
-            else if (values.TryGetValue("EMAIL", out _))
+            else if (values.TryGetValue(this.EMAIL, out Data.DataValue? _email))
             {
-                name = "EMAIL";
-                key = $"Preferences.{values[name].StringValue}";
-                this.LoadPreferences(null, values[name].StringValue);
+                name = this.EMAIL;
+                key = $"Preferences.{_email.StringValue}";
+                this.LoadPreferences(null, _email.StringValue);
             }
 
             if (name != null && key != null)
             {
-                Preferences? preferences1;
+                if (this.keyValues.TryGetValue(key, out object? obj) && obj is Preferences preferences2)
 
-                preferences1 = null;
-
-                if (key != null && this.keyValues.TryGetValue(key, out object? obj) && obj is Preferences preferences2)
-                    preferences1 = preferences2;
-
-                if (preferences1 != null)
                 {
-                    if (name == "USER_ID")
-                        preferencesModel = preferences1?.PreferencesList.Where(x => x.USER_ID == values["USER_ID"].IntValue && x.PREFERENCES_KEY == brokerData.ServiceData.Commands[commandKey].CommandText);
+                    IEnumerable<PreferencesModel>? preferencesModel = null;
+
+                    if (name == this.USER_ID)
+                        preferencesModel = preferences2?.PreferencesList.Where(x => x.USER_ID == values[this.USER_ID].IntValue && x.PREFERENCES_KEY == command.CommandText);
                     else
-                        preferencesModel = preferences1?.PreferencesList.Where(x => x.EMAIL == values["EMAIL"].StringValue && x.PREFERENCES_KEY == brokerData.ServiceData.Commands[commandKey].CommandText);
+                        preferencesModel = preferences2?.PreferencesList.Where(x => x.EMAIL == values[this.EMAIL].StringValue && x.PREFERENCES_KEY == command.CommandText);
+
+                    if (preferencesModel != null)
+                        foreach (var item in preferencesModel)
+                        {
+                            if (brokerData.Response.Status == Status.OK)
+                            {
+                                if (!MESSAGE_TITLE.IsNullOrEmpty() && !item.OK_TITLE.IsNullOrEmpty() && item.OK_TITLE.Contains("{0}"))
+                                    MESSAGE_TITLE = string.Format(item.OK_TITLE, MESSAGE_TITLE);
+                                else
+                                    MESSAGE_TITLE = item.OK_TITLE;
+
+                                if (!MESSAGE_BODY.IsNullOrEmpty() && !item.OK_BODY.IsNullOrEmpty() && item.OK_BODY.Contains("{0}"))
+                                    MESSAGE_BODY = string.Format(item.OK_BODY, MESSAGE_BODY);
+                                else
+                                    MESSAGE_BODY = item.OK_BODY;
+                            }
+                            else
+                            {
+                                if (!MESSAGE_TITLE.IsNullOrEmpty() && !item.FAILED_TITLE.IsNullOrEmpty() && item.FAILED_TITLE.Contains("{0}"))
+                                    MESSAGE_TITLE = string.Format(item.FAILED_TITLE, MESSAGE_TITLE);
+                                else
+                                    MESSAGE_TITLE = item.FAILED_TITLE;
+
+                                if (brokerData.Response.Message != null)
+                                {
+                                    if (!item.FAILED_BODY.IsNullOrEmpty() && item.FAILED_BODY.Contains("{0}"))
+                                        MESSAGE_BODY = string.Format(item.FAILED_BODY, brokerData.Response.Message);
+                                    else
+                                        MESSAGE_BODY = brokerData.Response.Message;
+                                }
+                                else
+                                {
+                                    if (!MESSAGE_BODY.IsNullOrEmpty() && !item.FAILED_BODY.IsNullOrEmpty() && item.FAILED_BODY.Contains("{0}"))
+                                        MESSAGE_BODY = string.Format(item.FAILED_BODY, MESSAGE_BODY);
+                                    else
+                                        MESSAGE_BODY = item.FAILED_BODY;
+                                }
+                            }
+
+                            if (MESSAGE_TITLE == "{0}" && MESSAGE_BODY == "{0}")
+                                return;
+
+                            if (MESSAGE_TITLE.IsNullOrEmpty() && MESSAGE_BODY.IsNullOrEmpty())
+                                return;
+
+                            if (item.PREFERENCES_TYPE == this.EmailNotification)
+                            {
+                                sandEmailList.Add(new()
+                                {
+                                    ACTION = command.CommandText,
+                                    EMAIL = item.EMAIL,
+                                    SUBJECT = MESSAGE_TITLE,
+                                    BODY = MESSAGE_BODY,
+                                });
+                            }
+                            else if (item.PREFERENCES_TYPE == this.PushNotification)
+                            {
+                                tokenDataTable = this.GetFirebaseFCM_Token(command.CommandText, item.EMAIL);
+
+                                if (tokenDataTable != null && tokenDataTable.DataTable != null)
+                                    foreach (var itemToken in tokenDataTable.DataTable.DataRows)
+                                        pushModelList.Add(new()
+                                        {
+                                            Action = command.CommandText,
+                                            Email = item.EMAIL,
+                                            Token = itemToken.String("TOKEN_STR"),
+                                            Title = MESSAGE_TITLE,
+                                            Body = MESSAGE_BODY,
+                                            ImageUrl = !IMAGE_URL.IsNullOrEmpty() ? IMAGE_URL : brokerData.Response.Status.ToString(),
+                                            Data = null,
+                                        });
+                            }
+                        }
                 }
             }
 
-            if (preferencesModel != null)
-                foreach (var item in preferencesModel)
-                {
-                    if (brokerData.Response.Status == Status.OK)
-                    {
-                        if (!MESSAGE_TITLE.IsNullOrEmpty() && !item.OK_TITLE.IsNullOrEmpty() && item.OK_TITLE.Contains("{0}"))
-                            MESSAGE_TITLE = string.Format(item.OK_TITLE, MESSAGE_TITLE);
-                        else
-                            MESSAGE_TITLE = item.OK_TITLE;
-
-                        if (!MESSAGE_BODY.IsNullOrEmpty() && !item.OK_BODY.IsNullOrEmpty() && item.OK_BODY.Contains("{0}"))
-                            MESSAGE_BODY = string.Format(item.OK_BODY, MESSAGE_BODY);
-                        else
-                            MESSAGE_BODY = item.OK_BODY;
-                    }
-                    else
-                    {
-                        if (!MESSAGE_TITLE.IsNullOrEmpty() && !item.FAILED_TITLE.IsNullOrEmpty() && item.FAILED_TITLE.Contains("{0}"))
-                            MESSAGE_TITLE = string.Format(item.FAILED_TITLE, MESSAGE_TITLE);
-                        else
-                            MESSAGE_TITLE = item.FAILED_TITLE;
-
-                        if (brokerData.Response.Message != null)
-                        {
-                            if (!item.FAILED_BODY.IsNullOrEmpty() && item.FAILED_BODY.Contains("{0}"))
-                                MESSAGE_BODY = string.Format(item.FAILED_BODY, brokerData.Response.Message);
-                            else
-                                MESSAGE_BODY = brokerData.Response.Message;
-                        }
-                        else
-                        {
-                            if (!MESSAGE_BODY.IsNullOrEmpty() && !item.FAILED_BODY.IsNullOrEmpty() && item.FAILED_BODY.Contains("{0}"))
-                                MESSAGE_BODY = string.Format(item.FAILED_BODY, MESSAGE_BODY);
-                            else
-                                MESSAGE_BODY = item.FAILED_BODY;
-                        }
-                    }
-
-                    if (MESSAGE_TITLE == "{0}" && MESSAGE_BODY == "{0}")
-                        return;
-
-                    if (MESSAGE_TITLE.IsNullOrEmpty() && MESSAGE_BODY.IsNullOrEmpty())
-                        return;
-
-                    if (item.PREFERENCES_TYPE == nameof(EmailNotification))
-                    {
-                        sandEmailList.Add(new()
-                        {
-                            ACTION = brokerData.ServiceData.Commands[commandKey].CommandText,
-                            EMAIL = item.EMAIL,
-                            SUBJECT = MESSAGE_TITLE,
-                            BODY = MESSAGE_BODY,
-                        });
-                    }
-                    else if (item.PREFERENCES_TYPE == nameof(PushNotification))
-                    {
-                        tokenDataTable = this.GetFirebaseFCM_Token(brokerData.ServiceData.Commands[commandKey].CommandText, item.EMAIL);
-
-                        if (tokenDataTable != null && tokenDataTable.DataTable != null)
-                            foreach (var itemToken in tokenDataTable.DataTable.DataRows)
-                                pushModelList.Add(new()
-                                {
-                                    Action = brokerData.ServiceData.Commands[commandKey].CommandText,
-                                    Email = item.EMAIL,
-                                    Token = itemToken.String("TOKEN_STR"),
-                                    Title = MESSAGE_TITLE,
-                                    Body = MESSAGE_BODY,
-                                    ImageUrl = !IMAGE_URL.IsNullOrEmpty() ? IMAGE_URL : brokerData.Response.Status.ToString(),
-                                    Data = null,
-                                });
-                    }
-                }
         }
 
         private TokenDataTable? GetFirebaseFCM_Token(string ACTION, string? EMAIL)
@@ -259,8 +258,8 @@ namespace MetaFrm.Service
             if (!this.keyValues.TryGetValue(key, out object? obj1))
             {
                 tokenDataTable = new TokenDataTable(DateTime.Now.AddSeconds(this.ReflashSeconds));//1분   2분5초-1분=>1분5초
-                if (!this.keyValues.TryAdd(key, tokenDataTable))
-                    Factory.Logger.LogError("GetFirebaseFCM_Token TryAdd Fail : {key}", key);
+                if (!this.keyValues.TryAdd(key, tokenDataTable) && Factory.Logger.IsEnabled(LogLevel.Warning))
+                    Factory.Logger.LogWarning("GetFirebaseFCM_Token TryAdd Fail : {key}", key);
             }
             else if (obj1 is TokenDataTable tokenDataTable1)
                 tokenDataTable = tokenDataTable1;
@@ -291,9 +290,13 @@ namespace MetaFrm.Service
                     }
                 }
                 else
-                    Factory.Logger.LogError("GetFirebaseFCM_Token Request Fail : {key} {Message}", key, response.Message);
+                {
+                    if (Factory.Logger.IsEnabled(LogLevel.Error))
+                        Factory.Logger.LogError("GetFirebaseFCM_Token Request Fail : {key} {Message}", key, response.Message);
+                }
 
-                Factory.Logger.LogError("Get FirebaseFCM Token Fail !! : {key}", key);
+                if (Factory.Logger.IsEnabled(LogLevel.Error))
+                    Factory.Logger.LogError("Get FirebaseFCM Token Fail !! : {key}", key);
             }
             else
                 return tokenDataTable;
@@ -301,7 +304,7 @@ namespace MetaFrm.Service
             return null;
         }
 
-        private void SandPushAsync(List<PushModel> pushModelList, DateTime dateTime)
+        private void SandPush(List<PushModel> pushModelList, DateTime dateTime)
         {
             IService service;
             Response response;
@@ -324,14 +327,14 @@ namespace MetaFrm.Service
             key = $"Preferences.{pushModelList[0].Email}";
             preferences = null;
 
-            if (pushModelList[0].Action != nameof(PushNotification) && this.keyValues.TryGetValue(key, out object? obj) && obj is Preferences preferences1)
+            if (pushModelList[0].Action != this.PushNotification && this.keyValues.TryGetValue(key, out object? obj) && obj is Preferences preferences1)
                 preferences = preferences1;
 
             foreach (var item in pushModelList)
             {
-                if (item.Action != nameof(PushNotification) && preferences != null)
+                if (item.Action != this.PushNotification && preferences != null)
                 {
-                    var itemPreferences = preferences.PreferencesList.SingleOrDefault(x => x.EMAIL == item.Email && x.PREFERENCES_TYPE == nameof(PushNotification) && x.PREFERENCES_KEY == item.Action);
+                    var itemPreferences = preferences.PreferencesList.SingleOrDefault(x => x.EMAIL == item.Email && x.PREFERENCES_TYPE == this.PushNotification && x.PREFERENCES_KEY == item.Action);
 
                     if (itemPreferences == null || itemPreferences.PREFERENCES_VALUE == "N")
                         continue;
@@ -349,10 +352,10 @@ namespace MetaFrm.Service
             //service = (IService)new MetaFrm.Service.FirebaseAdminService();
             response = service.Request(serviceData);
 
-            if (response.Status != Status.OK && response.Message != null)
-                Factory.Logger.LogError("SandPushAsync Request Fail : {key} {Message}", key, response.Message);
+            if (response.Status != Status.OK && response.Message != null && Factory.Logger.IsEnabled(LogLevel.Error))
+                Factory.Logger.LogError("SandPush Request Fail : {key} {Message}", key, response.Message);
         }
-        private void SandEmailAsync(List<SandEmailModel> sandEmailList)
+        private void SandEmail(List<SandEmailModel> sandEmailList)
         {
             IService service;
             Response response;
@@ -373,14 +376,14 @@ namespace MetaFrm.Service
             key = $"Preferences.{sandEmailList[0].EMAIL}";
             preferences = null;
 
-            if (sandEmailList[0].ACTION != nameof(EmailNotification) && this.keyValues.TryGetValue(key, out object? obj) && obj is Preferences preferences1)
+            if (sandEmailList[0].ACTION != this.EmailNotification && this.keyValues.TryGetValue(key, out object? obj) && obj is Preferences preferences1)
                 preferences = preferences1;
 
             foreach (var item in sandEmailList)
             {
-                if (item.ACTION != nameof(EmailNotification) && preferences != null)
+                if (item.ACTION != this.EmailNotification && preferences != null)
                 {
-                    var itemPreferences = preferences.PreferencesList.SingleOrDefault(x => x.EMAIL == item.EMAIL && x.PREFERENCES_TYPE == nameof(EmailNotification) && x.PREFERENCES_KEY == item.ACTION);
+                    var itemPreferences = preferences.PreferencesList.SingleOrDefault(x => x.EMAIL == item.EMAIL && x.PREFERENCES_TYPE == this.EmailNotification && x.PREFERENCES_KEY == item.ACTION);
 
                     if (itemPreferences == null || itemPreferences.PREFERENCES_VALUE == "N")
                         continue;
@@ -396,8 +399,8 @@ namespace MetaFrm.Service
             service = (IService)Factory.CreateInstance(serviceData.ServiceName);
             response = service.Request(serviceData);
 
-            if (response.Status != Status.OK && response.Message != null)
-                Factory.Logger.LogError("SandEmailAsync Request Fail : {key} {Message}", key, response.Message);
+            if (response.Status != Status.OK && response.Message != null && Factory.Logger.IsEnabled(LogLevel.Error))
+                Factory.Logger.LogError("SandEmail Request Fail : {key} {Message}", key, response.Message);
         }
 
         private void LoadPreferences(int? USER_ID, string? EMAIL)
@@ -412,8 +415,8 @@ namespace MetaFrm.Service
             if (!this.keyValues.TryGetValue(key, out object? obj))
             {
                 obj = new Preferences(DateTime.Now.AddSeconds(this.ReflashSeconds));//1분   2분5초-1분=>1분5초
-                if (!this.keyValues.TryAdd(key, obj))
-                    Factory.Logger.LogError("LoadPreferences TryAdd Fail : {key}", key);
+                if (!this.keyValues.TryAdd(key, obj) && Factory.Logger.IsEnabled(LogLevel.Warning))
+                    Factory.Logger.LogWarning("LoadPreferences TryAdd Fail : {key}", key);
             }
 
             if (obj != null && obj is Preferences preferences && (preferences.DateTime <= DateTime.Now.AddSeconds(this.ReflashSeconds) || preferences.PreferencesList.Count < 1))
@@ -428,8 +431,8 @@ namespace MetaFrm.Service
                     {
                         key = $"Preferences.{preferences.PreferencesList[0].EMAIL}";
 
-                        if (!this.keyValues.TryGetValue(key, out var _) && !this.keyValues.TryAdd(key, preferences))
-                            Factory.Logger.LogError("LoadPreferences keyValues TryAdd Fail : {key}", key);
+                        if (!this.keyValues.TryGetValue(key, out var _) && !this.keyValues.TryAdd(key, preferences) && Factory.Logger.IsEnabled(LogLevel.Warning))
+                            Factory.Logger.LogWarning("LoadPreferences keyValues TryAdd Fail : {key}", key);
                     }
                 }
                 else
@@ -438,8 +441,8 @@ namespace MetaFrm.Service
                     {
                         key = $"Preferences.{preferences.PreferencesList[0].USER_ID}";
 
-                        if (!this.keyValues.TryGetValue(key, out var _) && !this.keyValues.TryAdd(key, preferences))
-                            Factory.Logger.LogError("LoadPreferences keyValues TryAdd Fail : {key}", key);
+                        if (!this.keyValues.TryGetValue(key, out var _) && !this.keyValues.TryAdd(key, preferences) && Factory.Logger.IsEnabled(LogLevel.Warning))
+                            Factory.Logger.LogWarning("LoadPreferences keyValues TryAdd Fail : {key}", key);
                     }
                 }
             }
@@ -483,7 +486,10 @@ namespace MetaFrm.Service
                         });
             }
             else
-                Factory.Logger.LogError("LoadPreferencesDB Request Fail : {USER_ID} {EMAIL} {Message}", USER_ID, EMAIL, response.Message);
+            {
+                if (Factory.Logger.IsEnabled(LogLevel.Error))
+                    Factory.Logger.LogError("LoadPreferencesDB Request Fail : {USER_ID} {EMAIL} {Message}", USER_ID, EMAIL, response.Message);
+            }
 
             return preferences;
         }
