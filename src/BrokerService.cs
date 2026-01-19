@@ -53,7 +53,7 @@ namespace MetaFrm.Service
                             if (valuesEmail.TryGetValue(nameof(SandEmailModel.EMAIL), out Data.DataValue? email1)
                                 && valuesEmail.TryGetValue(nameof(SandEmailModel.SUBJECT), out Data.DataValue? subject1)
                                 && valuesEmail.TryGetValue(nameof(SandEmailModel.BODY), out Data.DataValue? body1))
-                                if (!email1.StringValue.IsNullOrEmpty())
+                                if (!string.IsNullOrEmpty(email1.StringValue))
                                 {
                                     sandEmailList.Add(new()
                                     {
@@ -74,7 +74,7 @@ namespace MetaFrm.Service
                                 && valuesPush.TryGetValue(nameof(PushModel.Body), out Data.DataValue? body2)
                                 && valuesPush.TryGetValue(nameof(PushModel.ImageUrl), out Data.DataValue? imageUrl2)
                                 && valuesPush.TryGetValue(nameof(PushModel.Data), out Data.DataValue? data2))
-                                if (!email2.StringValue.IsNullOrEmpty())
+                                if (!string.IsNullOrEmpty(email2.StringValue))
                                 {
                                     tokenDataTable = this.GetFirebaseFCM_Token(command.CommandText, email2.StringValue);
 
@@ -173,33 +173,33 @@ namespace MetaFrm.Service
                         {
                             if (brokerData.Response.Status == Status.OK)
                             {
-                                if (!MESSAGE_TITLE.IsNullOrEmpty() && !item.OK_TITLE.IsNullOrEmpty() && item.OK_TITLE.Contains("{0}"))
+                                if (!string.IsNullOrEmpty(MESSAGE_TITLE) && !string.IsNullOrEmpty(item.OK_TITLE) && item.OK_TITLE.Contains("{0}"))
                                     MESSAGE_TITLE = string.Format(item.OK_TITLE, MESSAGE_TITLE);
                                 else
                                     MESSAGE_TITLE = item.OK_TITLE;
 
-                                if (!MESSAGE_BODY.IsNullOrEmpty() && !item.OK_BODY.IsNullOrEmpty() && item.OK_BODY.Contains("{0}"))
+                                if (!string.IsNullOrEmpty(MESSAGE_BODY) && !string.IsNullOrEmpty(item.OK_BODY) && item.OK_BODY.Contains("{0}"))
                                     MESSAGE_BODY = string.Format(item.OK_BODY, MESSAGE_BODY);
                                 else
                                     MESSAGE_BODY = item.OK_BODY;
                             }
                             else
                             {
-                                if (!MESSAGE_TITLE.IsNullOrEmpty() && !item.FAILED_TITLE.IsNullOrEmpty() && item.FAILED_TITLE.Contains("{0}"))
+                                if (!string.IsNullOrEmpty(MESSAGE_TITLE) && !string.IsNullOrEmpty(item.FAILED_TITLE) && item.FAILED_TITLE.Contains("{0}"))
                                     MESSAGE_TITLE = string.Format(item.FAILED_TITLE, MESSAGE_TITLE);
                                 else
                                     MESSAGE_TITLE = item.FAILED_TITLE;
 
                                 if (brokerData.Response.Message != null)
                                 {
-                                    if (!item.FAILED_BODY.IsNullOrEmpty() && item.FAILED_BODY.Contains("{0}"))
+                                    if (!string.IsNullOrEmpty(item.FAILED_BODY) && item.FAILED_BODY.Contains("{0}"))
                                         MESSAGE_BODY = string.Format(item.FAILED_BODY, brokerData.Response.Message);
                                     else
                                         MESSAGE_BODY = brokerData.Response.Message;
                                 }
                                 else
                                 {
-                                    if (!MESSAGE_BODY.IsNullOrEmpty() && !item.FAILED_BODY.IsNullOrEmpty() && item.FAILED_BODY.Contains("{0}"))
+                                    if (!string.IsNullOrEmpty(MESSAGE_BODY) && !string.IsNullOrEmpty(item.FAILED_BODY) && item.FAILED_BODY.Contains("{0}"))
                                         MESSAGE_BODY = string.Format(item.FAILED_BODY, MESSAGE_BODY);
                                     else
                                         MESSAGE_BODY = item.FAILED_BODY;
@@ -209,7 +209,7 @@ namespace MetaFrm.Service
                             if (MESSAGE_TITLE == "{0}" && MESSAGE_BODY == "{0}")
                                 return;
 
-                            if (MESSAGE_TITLE.IsNullOrEmpty() && MESSAGE_BODY.IsNullOrEmpty())
+                            if (string.IsNullOrEmpty(MESSAGE_TITLE) && string.IsNullOrEmpty(MESSAGE_BODY))
                                 return;
 
                             if (item.PREFERENCES_TYPE == this.EmailNotification)
@@ -235,7 +235,7 @@ namespace MetaFrm.Service
                                             Token = itemToken.String("TOKEN_STR"),
                                             Title = MESSAGE_TITLE,
                                             Body = MESSAGE_BODY,
-                                            ImageUrl = !IMAGE_URL.IsNullOrEmpty() ? IMAGE_URL : brokerData.Response.Status.ToString(),
+                                            ImageUrl = !string.IsNullOrEmpty(IMAGE_URL) ? IMAGE_URL : brokerData.Response.Status.ToString(),
                                             Data = null,
                                         });
                             }
