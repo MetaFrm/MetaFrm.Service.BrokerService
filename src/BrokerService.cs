@@ -493,5 +493,12 @@ namespace MetaFrm.Service
 
             return preferences;
         }
+
+        Task<string> IServiceString.RequestAsync(string data)
+        {
+            string result = ((IServiceString)this).Request(data);
+
+            return Task.FromResult(result);
+        }
     }
 }
