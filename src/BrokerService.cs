@@ -1,6 +1,5 @@
 ﻿using MetaFrm.Database;
 using MetaFrm.Models;
-using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 using System.Text.Json;
 
@@ -258,8 +257,8 @@ namespace MetaFrm.Service
             if (!this.keyValues.TryGetValue(key, out object? obj1))
             {
                 tokenDataTable = new TokenDataTable(DateTime.Now.AddSeconds(this.ReflashSeconds));//1분   2분5초-1분=>1분5초
-                if (!this.keyValues.TryAdd(key, tokenDataTable) && Factory.Logger.IsEnabled(LogLevel.Warning))
-                    Factory.Logger.LogWarning("GetFirebaseFCM_Token TryAdd Fail : {key}", key);
+                if (!this.keyValues.TryAdd(key, tokenDataTable))
+                    Factory.Logger.Warning("GetFirebaseFCM_Token TryAdd Fail : {0}", key);
             }
             else if (obj1 is TokenDataTable tokenDataTable1)
                 tokenDataTable = tokenDataTable1;
@@ -290,13 +289,9 @@ namespace MetaFrm.Service
                     }
                 }
                 else
-                {
-                    if (Factory.Logger.IsEnabled(LogLevel.Error))
-                        Factory.Logger.LogError("GetFirebaseFCM_Token Request Fail : {key} {Message}", key, response.Message);
-                }
+                    Factory.Logger.Error("GetFirebaseFCM_Token Request Fail : {0} {1}", key, response.Message);
 
-                if (Factory.Logger.IsEnabled(LogLevel.Error))
-                    Factory.Logger.LogError("Get FirebaseFCM Token Fail !! : {key}", key);
+                Factory.Logger.Error("Get FirebaseFCM Token Fail !! : {0}", key);
             }
             else
                 return tokenDataTable;
@@ -352,8 +347,8 @@ namespace MetaFrm.Service
             //service = (IService)new MetaFrm.Service.FirebaseAdminService();
             response = service.Request(serviceData);
 
-            if (response.Status != Status.OK && response.Message != null && Factory.Logger.IsEnabled(LogLevel.Error))
-                Factory.Logger.LogError("SandPush Request Fail : {key} {Message}", key, response.Message);
+            if (response.Status != Status.OK && response.Message != null)
+                Factory.Logger.Error("SandPush Request Fail : {0} {1}", key, response.Message);
         }
         private void SandEmail(List<SandEmailModel> sandEmailList)
         {
@@ -399,8 +394,8 @@ namespace MetaFrm.Service
             service = (IService)Factory.CreateInstance(serviceData.ServiceName);
             response = service.Request(serviceData);
 
-            if (response.Status != Status.OK && response.Message != null && Factory.Logger.IsEnabled(LogLevel.Error))
-                Factory.Logger.LogError("SandEmail Request Fail : {key} {Message}", key, response.Message);
+            if (response.Status != Status.OK && response.Message != null)
+                Factory.Logger.Error("SandEmail Request Fail : {0} {1}", key, response.Message);
         }
 
         private void LoadPreferences(int? USER_ID, string? EMAIL)
@@ -415,8 +410,8 @@ namespace MetaFrm.Service
             if (!this.keyValues.TryGetValue(key, out object? obj))
             {
                 obj = new Preferences(DateTime.Now.AddSeconds(this.ReflashSeconds));//1분   2분5초-1분=>1분5초
-                if (!this.keyValues.TryAdd(key, obj) && Factory.Logger.IsEnabled(LogLevel.Warning))
-                    Factory.Logger.LogWarning("LoadPreferences TryAdd Fail : {key}", key);
+                if (!this.keyValues.TryAdd(key, obj))
+                    Factory.Logger.Warning("LoadPreferences TryAdd Fail : {0}", key);
             }
 
             if (obj != null && obj is Preferences preferences && (preferences.DateTime <= DateTime.Now.AddSeconds(this.ReflashSeconds) || preferences.PreferencesList.Count < 1))
@@ -431,8 +426,8 @@ namespace MetaFrm.Service
                     {
                         key = $"Preferences.{preferences.PreferencesList[0].EMAIL}";
 
-                        if (!this.keyValues.TryGetValue(key, out var _) && !this.keyValues.TryAdd(key, preferences) && Factory.Logger.IsEnabled(LogLevel.Warning))
-                            Factory.Logger.LogWarning("LoadPreferences keyValues TryAdd Fail : {key}", key);
+                        if (!this.keyValues.TryGetValue(key, out var _) && !this.keyValues.TryAdd(key, preferences))
+                            Factory.Logger.Warning("LoadPreferences keyValues TryAdd Fail : {0}", key);
                     }
                 }
                 else
@@ -441,8 +436,8 @@ namespace MetaFrm.Service
                     {
                         key = $"Preferences.{preferences.PreferencesList[0].USER_ID}";
 
-                        if (!this.keyValues.TryGetValue(key, out var _) && !this.keyValues.TryAdd(key, preferences) && Factory.Logger.IsEnabled(LogLevel.Warning))
-                            Factory.Logger.LogWarning("LoadPreferences keyValues TryAdd Fail : {key}", key);
+                        if (!this.keyValues.TryGetValue(key, out var _) && !this.keyValues.TryAdd(key, preferences))
+                            Factory.Logger.Warning("LoadPreferences keyValues TryAdd Fail : {0}", key);
                     }
                 }
             }
@@ -486,10 +481,7 @@ namespace MetaFrm.Service
                         });
             }
             else
-            {
-                if (Factory.Logger.IsEnabled(LogLevel.Error))
-                    Factory.Logger.LogError("LoadPreferencesDB Request Fail : {USER_ID} {EMAIL} {Message}", USER_ID, EMAIL, response.Message);
-            }
+                Factory.Logger.Error("LoadPreferencesDB Request Fail : {0} {1} {2}", USER_ID, EMAIL, response.Message);
 
             return preferences;
         }
