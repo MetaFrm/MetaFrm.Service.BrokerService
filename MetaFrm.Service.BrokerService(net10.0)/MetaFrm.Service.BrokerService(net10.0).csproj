@@ -5,23 +5,23 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <AssemblyName>MetaFrm.Service.BrokerService</AssemblyName>
-    <ApplicationIcon>icon.ico</ApplicationIcon>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <PackageId>MetaFrm.Service.BrokerService.net10.0</PackageId>
-    <Title>Meta Framework Service BrokerService</Title>
-    <Version>10.0.1.20</Version>
+    <Version>10.0.3.0</Version>
     <Authors>dsun</Authors>
     <Company>Meta Framework</Company>
-    <Product>Meta Framework Service BrokerService</Product>
-    <Description>Meta Framework
-(Multi platform &amp; Meta management)</Description>
     <Copyright>Copyright 2026. dsun all rights reserved.</Copyright>
     <PackageProjectUrl>https://github.com/MetaFrm/MetaFrm.Service.BrokerService</PackageProjectUrl>
     <RepositoryUrl>https://github.com/MetaFrm/MetaFrm.Service.BrokerService</RepositoryUrl>
-    <PackageIcon>icon.png</PackageIcon>
     <PackageTags>meta;framework;dotnet;maui;</PackageTags>
     <SourceRevisionId>build$([System.DateTime]::UtcNow.ToString("yyyy-MM-ddTHH:mm:ss:fffZ"))</SourceRevisionId>
+    <Title>Meta Framework Service BrokerService</Title>
+    <Description>Meta Framework
+(Multi platform &amp; Meta management)</Description>
+    <Product>Meta Framework Service BrokerService</Product>
+    <PackageIcon>icon.png</PackageIcon>
+    <ApplicationIcon>icon.ico</ApplicationIcon>
     <PackageReadmeFile>readme.md</PackageReadmeFile>
   </PropertyGroup>
   <ItemGroup>
@@ -39,7 +39,7 @@
     <Content Include="icon.ico" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="MetaFrm.Core.net10.0" Version="10.0.1.20" />
+    <PackageReference Include="MetaFrm.Core.net10.0" Version="10.0.3" />
   </ItemGroup>
   <ItemGroup>
     <None Include="icon.png">
